@@ -1,14 +1,17 @@
 import type { Page, Response } from '@playwright/test';
 import { expect } from '@playwright/test';
 import { CommonsLocators } from './LocatorsPage';
+import { CommonPages } from './CommonPages';
 import { brokenImages } from '../tests/fixtures/site';
 
 /** Metode comune tuturor paginilor: navigare, meniu, banner cookie-uri, imagini rupte. */
 export class BasePage {
   readonly commons: CommonsLocators;
+  readonly helpers: CommonPages;
 
   constructor(readonly page: Page, readonly path: string = '/') {
     this.commons = new CommonsLocators(page);
+    this.helpers = new CommonPages(page);
   }
 
   async open(): Promise<Response | null> {
@@ -23,14 +26,11 @@ export class BasePage {
   }
 
   async clickNav(label: string): Promise<void> {
-    await this.commons.navLink(label).or(this.commons.header.getByRole('link', { name: label, exact: true })).first().click();
+    await this.commons.navLink(label).click();
   }
 
   async expectNavLink(label: string, href: RegExp): Promise<void> {
-    const link = this.commons.navLink(label)
-      .or(this.commons.header.getByRole('link', { name: label, exact: true }))
-      .first();
-    await expect(link, `link "${label}"`).toHaveAttribute('href', href);
+    await expect(this.commons.navLink(label), `link "${label}"`).toHaveAttribute('href', href);
   }
 
   async clickLogo(): Promise<void> {

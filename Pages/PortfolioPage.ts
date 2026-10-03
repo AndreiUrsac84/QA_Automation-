@@ -14,7 +14,7 @@ export class PortfolioPage extends BasePage {
   async expectCategories(): Promise<void> {
     await expect(this.portfolio.title).toBeVisible();
     for (const cat of PortfolioLocators.CATEGORIES) {
-      await expect.soft(this.portfolio.category(cat), cat).toBeVisible();
+      await expect.soft(this.portfolio.categoryTitle(cat.id), cat.name).toBeVisible();
     }
   }
 }

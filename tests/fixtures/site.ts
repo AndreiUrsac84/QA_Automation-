@@ -1,4 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test';
+import { CommonPages } from '../../Pages/CommonPages';
 
 /** Paginile principale ale site-ului. Actualizează aici când apare o pagină nouă. */
 export const PAGES = [
@@ -32,11 +33,24 @@ type Fixtures = {
   consoleErrors: string[];
 };
 
+/** După fiecare page.goto() rămâne PAGE_PAUSE_MS pe pagină (1s implicit; PAGE_PAUSE_MS=0 dezactivează). */
+const withPagePause = base.extend<{ page: Page }>({
+  page: async ({ page }, use) => {
+    const goto = page.goto.bind(page);
+    page.goto = (async (url, options) => {
+      const response = await goto(url, options);
+      await new CommonPages(page).pause();
+      return response;
+    }) as typeof page.goto;
+    await use(page);
+  },
+});
+
 /**
  * Fixture care colectează erorile de consolă + excepțiile JS din pagină.
  * Testele care vor să le verifice apelează expect(consoleErrors).toEqual([]).
  */
-export const test = base.extend<Fixtures>({
+export const test = withPagePause.extend<Fixtures>({
   consoleErrors: async ({ page }, use) => {
     const errors: string[] = [];
     page.on('console', (msg) => {

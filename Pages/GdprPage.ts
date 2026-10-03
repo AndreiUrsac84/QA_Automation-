@@ -13,8 +13,8 @@ export class GdprPage extends BasePage {
 
   async expectSections(): Promise<void> {
     await expect(this.gdpr.title).toBeVisible();
-    for (const n of ['1.', '2.', '3.', '4.', '5.', '6.', '7.']) {
-      await expect.soft(this.gdpr.section(n), `secțiunea ${n}`).toBeVisible();
+    for (const n of [1, 2, 3, 4, 5, 6, 7]) {
+      await expect.soft(this.gdpr.sectionTitle(n), `secțiunea ${n}`).toBeVisible();
     }
   }
 }

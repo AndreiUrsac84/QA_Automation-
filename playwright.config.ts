@@ -27,6 +27,8 @@ export default defineConfig({
   ],
   use: {
     baseURL: BASE_URL,
+    // site-ul expune id-uri stabile (menu-logo, contact-submit-button...): getByTestId('x') caută după id
+    testIdAttribute: 'id',
     headless: HEADLESS,
     launchOptions: { slowMo: SLOW_MO },
     locale: 'ro-RO',
@@ -40,10 +42,14 @@ export default defineConfig({
   },
   snapshotPathTemplate: '{testDir}/__screenshots__/{projectName}/{arg}{ext}',
   projects: [
-    { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] }, testIgnore: /visual\.spec/ },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] }, testIgnore: /visual\.spec/ },
-    { name: 'desktop-firefox', use: { ...devices['Desktop Firefox'] }, grep: /@smoke/, testIgnore: /visual\.spec/ },
-    { name: 'mobile-safari', use: { ...devices['iPhone 14'] }, grep: /@smoke/, testIgnore: /visual\.spec/ },
+    { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] }, testIgnore: /visual\.spec|tour\.spec/ },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] }, testIgnore: /visual\.spec|tour\.spec/ },
+    { name: 'desktop-firefox', use: { ...devices['Desktop Firefox'] }, grep: /@smoke/, testIgnore: /visual\.spec|tour\.spec/ },
+    { name: 'mobile-safari', use: { ...devices['iPhone 14'] }, grep: /@smoke/, testIgnore: /visual\.spec|tour\.spec/ },
+    // tur prin toate paginile, câte un proiect pe motor – rulat separat: npm run test:tour (repetat) sau test:tour:once
+    { name: 'tour-chromium', use: { ...devices['Desktop Chrome'] }, testMatch: /tour\.spec/ },
+    { name: 'tour-firefox', use: { ...devices['Desktop Firefox'] }, testMatch: /tour\.spec/ },
+    { name: 'tour-webkit', use: { ...devices['Desktop Safari'] }, testMatch: /tour\.spec/ },
     // regresie vizuală – rulată separat: npm run test:visual
     { name: 'visual-desktop', use: { ...devices['Desktop Chrome'] }, testMatch: /visual\.spec/ },
     { name: 'visual-mobile', use: { ...devices['Pixel 7'] }, testMatch: /visual\.spec/ },

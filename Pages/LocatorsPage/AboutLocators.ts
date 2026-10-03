@@ -1,15 +1,16 @@
 import type { Locator, Page } from '@playwright/test';
 
-/** Locatori pagina About Us (/about/). */
+/** Locatori pagina About Us (/about/), după id. */
 export class AboutLocators {
   constructor(private readonly page: Page) {}
 
-  get title(): Locator { return this.page.getByRole('heading', { level: 1 }); }
-  get mission(): Locator { return this.page.getByRole('heading', { name: 'Misiune' }); }
-  get vision(): Locator { return this.page.getByRole('heading', { name: 'Viziune' }); }
-  get values(): Locator { return this.page.getByRole('heading', { name: 'Valori' }); }
-  get experience(): Locator { return this.page.getByRole('heading', { name: /Experiență și parcurs profesional/ }); }
-  get whyUs(): Locator { return this.page.getByRole('heading', { name: /De ce să lucrezi cu DAURON TRUST/ }); }
-  get collaborators(): Locator { return this.page.getByRole('heading', { name: 'Colaboratorii noștri' }); }
-  get howWeWork(): Locator { return this.page.getByRole('heading', { name: 'Cum lucrăm' }); }
+  get title(): Locator { return this.page.getByTestId('about-title'); }
+  get mission(): Locator { return this.page.getByTestId('about-misiune-titlu'); }
+  get vision(): Locator { return this.page.getByTestId('about-viziune-titlu'); }
+  get values(): Locator { return this.page.getByTestId('about-valori-titlu'); }
+  get experience(): Locator { return this.page.getByTestId('about-experienta-si-parcurs-profesional-titlu'); }
+  get whyUs(): Locator { return this.page.getByTestId('about-de-ce-sa-lucrezi-cu-titlu'); }
+  get collaborators(): Locator { return this.page.getByTestId('about-colaboratorii-nostri-titlu'); }
+  get howWeWork(): Locator { return this.page.getByTestId('about-cum-lucram-titlu'); }
+  get howWeWorkSteps(): Locator { return this.page.getByTestId(/^about-cum-lucram-item-\d+$/); }
 }

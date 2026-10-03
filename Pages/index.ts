@@ -1,3 +1,4 @@
+export { CommonPages, PAGE_PAUSE_MS } from './CommonPages';
 export { BasePage } from './BasePage';
 export { HomePage } from './HomePage';
 export { AboutPage } from './AboutPage';
