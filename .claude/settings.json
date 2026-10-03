@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test*)",
+      "Bash(npm run test*)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run report)",
+      "Bash(npm ci)",
+      "Bash(npx playwright test*)",
+      "Bash(npx playwright install*)",
+      "Bash(npx playwright show-trace*)",
+      "Bash(npx tsc*)",
+      "WebFetch(domain:dauron-trust.com)"
+    ],
+    "deny": [
+      "Bash(*CONTACT_LIVE_SUBMIT=1*)",
+      "Bash(*--update-snapshots*)",
+      "Bash(npm run test:visual:update)"
+    ]
+  }
+}

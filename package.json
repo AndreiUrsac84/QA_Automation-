@@ -1,0 +1,25 @@
+{
+  "name": "dauron-trust-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Testare automat\u0103 E2E pentru dauron-trust.com (Playwright + TypeScript)",
+  "scripts": {
+    "test": "playwright test --project=desktop-chrome --project=mobile-chrome --project=desktop-firefox --project=mobile-safari",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:desktop": "playwright test --project=desktop-chrome",
+    "test:mobile": "playwright test --project=mobile-chrome",
+    "test:headed": "playwright test --headed --project=desktop-chrome",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "test:visual": "playwright test --project=visual-desktop --project=visual-mobile",
+    "test:visual:update": "playwright test --project=visual-desktop --project=visual-mobile --update-snapshots",
+    "install:browsers": "playwright install --with-deps chromium firefox webkit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@axe-core/playwright": "^4.13.0",
+    "typescript": "^7.0.2",
+    "@types/node": "^26.6.4"
+  }
+}
