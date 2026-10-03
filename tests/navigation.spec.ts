@@ -1,4 +1,4 @@
-import { test, expect, PAGES, NAV_ITEMS, CONTACT } from './fixtures/site';
+import { test, expect, PAGES, NAV_ITEMS, CONTACT, cookieBanner } from './fixtures/site';
 
 test.describe('Navigare și elemente comune', () => {
   for (const p of PAGES) {
@@ -37,6 +37,20 @@ test.describe('Navigare și elemente comune', () => {
       await expect(page).toHaveURL(item.href);
       await expect(page.locator('h1').first()).toBeVisible();
     }
+  });
+
+  test('banner cookie-uri GDPR: „Accept” îl închide și alegerea se păstrează @smoke', async ({ page }) => {
+    await page.goto('/');
+    const accept = cookieBanner(page);
+    await expect(accept, 'bannerul de cookie-uri trebuie afișat la prima vizită').toBeVisible();
+    await expect(page.getByRole('button', { name: 'Refuz', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Politica de/i }).first()).toHaveAttribute('href', /\/gdpr\/?$/);
+
+    await accept.click();
+    await expect(accept).toBeHidden();
+
+    await page.reload();
+    await expect(accept, 'după acceptare bannerul nu mai trebuie să reapară').toBeHidden();
   });
 
   test('logo duce la Home', async ({ page }) => {

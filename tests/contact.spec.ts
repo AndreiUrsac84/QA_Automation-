@@ -1,4 +1,4 @@
-import { test, expect, CONTACT } from './fixtures/site';
+import { test, expect, CONTACT, acceptCookies } from './fixtures/site';
 import type { Page, Request } from '@playwright/test';
 
 /**
@@ -29,6 +29,8 @@ const form = (page: Page) => page.locator('form').filter({ has: page.getByRole('
 test.describe('Pagina Contact', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/contact/');
+    // bannerul fix din josul paginii poate acoperi butonul „Trimite”
+    await acceptCookies(page);
   });
 
   test('datele de contact sunt afișate și linkurile sunt corecte @smoke', async ({ page }) => {

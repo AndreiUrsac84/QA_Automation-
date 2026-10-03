@@ -1,6 +1,16 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Încarcă variabilele din .env (dacă există); valorile deja setate în shell au prioritate.
+try {
+  process.loadEnvFile('.env');
+} catch {
+  // fără .env se folosesc valorile implicite
+}
+
 const BASE_URL = process.env.BASE_URL ?? 'https://dauron-trust.com';
+// HEADLESS=true pentru rulare fără fereastră (implicit: browser vizibil)
+const HEADLESS = process.env.HEADLESS === 'true' || !!process.env.CI;
+const SLOW_MO = Number(process.env.SLOW_MO ?? 0);
 
 export default defineConfig({
   testDir: './tests',
@@ -9,7 +19,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  workers: process.env.CI ? 2 : 4,
+  workers: Number(process.env.WORKERS ?? (process.env.CI ? 2 : 4)),
   reporter: [
     ['list'],
     ['html', { open: 'never', outputFolder: 'playwright-report' }],
@@ -17,6 +27,8 @@ export default defineConfig({
   ],
   use: {
     baseURL: BASE_URL,
+    headless: HEADLESS,
+    launchOptions: { slowMo: SLOW_MO },
     locale: 'ro-RO',
     timezoneId: 'Europe/Bucharest',
     trace: 'retain-on-failure',

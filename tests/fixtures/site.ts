@@ -52,6 +52,15 @@ export const test = base.extend<Fixtures>({
 
 export { expect };
 
+/** Bannerul de cookie-uri (GDPR): butoanele „Accept” / „Refuz”. */
+export const cookieBanner = (page: Page) => page.getByRole('button', { name: 'Accept', exact: true });
+
+/** Apasă „Accept” pe bannerul de cookie-uri, dacă este afișat. */
+export async function acceptCookies(page: Page): Promise<void> {
+  const accept = cookieBanner(page);
+  if (await accept.isVisible().catch(() => false)) await accept.click();
+}
+
 /** Imagini încărcate efectiv dar cu naturalWidth 0 = imagini rupte. */
 export async function brokenImages(page: Page): Promise<string[]> {
   await page.evaluate(async () => {
