@@ -12,6 +12,28 @@ export class CommonPages {
     if (ms > 0) await this.page.waitForTimeout(ms);
   }
 
+  /**
+   * Derulează pagina de sus în jos, frame cu frame (requestAnimationFrame), liniar, în exact `ms` milisecunde.
+   * Dacă pagina încape în ecran, doar așteaptă `ms`. Înălțimea se recalculează la fiecare frame (lazy-load).
+   */
+  async smoothScroll(ms: number): Promise<void> {
+    await this.page.evaluate(
+      (duration) =>
+        new Promise<void>((resolve) => {
+          const start = performance.now();
+          const step = (now: number) => {
+            const t = Math.min(1, (now - start) / duration);
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            window.scrollTo({ top: Math.max(0, max) * t, behavior: 'instant' });
+            if (t < 1) requestAnimationFrame(step);
+            else resolve();
+          };
+          requestAnimationFrame(step);
+        }),
+      ms,
+    );
+  }
+
   /** Așteaptă încărcarea DOM-ului și a resurselor paginii. */
   async waitForPageLoad(): Promise<void> {
     await this.page.waitForLoadState('domcontentloaded');
