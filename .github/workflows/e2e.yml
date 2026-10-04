@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       suite:
-        description: 'smoke | full'
-        default: 'full'
+        description: 'tour | smoke | full'
+        default: 'tour'
   push:
     branches: [main]
 
