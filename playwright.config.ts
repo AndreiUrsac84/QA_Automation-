@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 
 // Încarcă variabilele din .env (dacă există); valorile deja setate în shell au prioritate.
 try {
@@ -7,7 +8,27 @@ try {
   // fără .env se folosesc valorile implicite
 }
 
-const BASE_URL = process.env.BASE_URL ?? 'https://dauron-trust.com';
+/** Verifică sincron dacă un URL răspunde (orice status HTTP = server pornit). Folosit pentru fallback-ul BASE_URL. */
+function isReachable(url: string): boolean {
+  const probe =
+    "const m=require(process.argv[1].startsWith('https')?'https':'http');" +
+    "m.get(process.argv[1],{timeout:2000},r=>{r.resume();process.exit(0)}).on('error',()=>process.exit(1)).on('timeout',()=>process.exit(1));";
+  try {
+    execFileSync(process.execPath, ['-e', probe, url], { stdio: 'ignore', timeout: 5000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * BASE_URL = ținta principală (ex. Docker local). Dacă nu răspunde și există BASE_URL_FALLBACK (ex. producția),
+ * testele rulează pe fallback. Fără BASE_URL se folosește producția.
+ */
+const PRIMARY_URL = process.env.BASE_URL ?? 'https://dauron-trust.com';
+const FALLBACK_URL = process.env.BASE_URL_FALLBACK;
+const BASE_URL = FALLBACK_URL && !isReachable(PRIMARY_URL) ? FALLBACK_URL : PRIMARY_URL;
+if (!process.env.TEST_WORKER_INDEX) console.error(`[config] BASE_URL = ${BASE_URL}${BASE_URL === PRIMARY_URL ? '' : ` (fallback; ${PRIMARY_URL} nu răspunde)`}`);
 // HEADLESS=true pentru rulare fără fereastră (implicit: browser vizibil)
 const HEADLESS = process.env.HEADLESS === 'true' || !!process.env.CI;
 const SLOW_MO = Number(process.env.SLOW_MO ?? 0);

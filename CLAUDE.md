@@ -10,7 +10,12 @@ Limba: română, în comentarii, mesaje de assert și rapoarte.
 - `playwright.config.ts` – baseURL (`BASE_URL` env, implicit producție), proiecte: desktop-chrome, mobile-chrome,
   desktop-firefox (@smoke), mobile-safari (@smoke), visual-desktop, visual-mobile
 - `tests/fixtures/site.ts` – lista de pagini (`PAGES`), meniu (`NAV_ITEMS`), date contact, fixture `consoleErrors`,
-  helper `brokenImages`. **Orice pagină nouă de pe site se adaugă întâi aici.**
+  helper `brokenImages`. **Orice pagină nouă de pe site se adaugă întâi aici** (cu `titleId`, id-ul titlului);
+  testul „acoperire” din `seo.spec.ts` pică dacă sitemap-ul are pagini care lipsesc din `PAGES`.
+- `Pages/` – Page Objects, câte unul per pagină; `Pages/LocatorsPage/` – locatorii după id. Specurile le folosesc.
+- `BASE_URL` = adresa principală (producție); `BASE_URL_FALLBACK` (ex. Docker local `http://localhost:8080`) se folosește
+  doar dacă principala nu răspunde.
+- `tests/tour.spec.ts` – tur cu derulare lentă prin pagini și articole (proiecte `tour-*`, rulare separată)
 - `tests/smoke.spec.ts` – status HTTP, title, H1, logo, imagini rupte, erori JS, redirect HTTPS, 404, timp încărcare
 - `tests/navigation.spec.ts` – meniu, footer, CTA-uri, logo
 - `tests/contact.spec.ts` – date contact + formular (validări, GDPR, submit **mock**)
@@ -43,7 +48,9 @@ Rezultatele brute: `test-results/results.json`. Trace-uri la eșec: `npx playwri
 3. Când un test pică, decide dacă e **bug pe site** sau **test fragil / site schimbat voit**:
    - bug pe site → nu modifica testul ca să treacă; raportează-l.
    - site schimbat voit (text nou, pagină nouă) → actualizează `fixtures/site.ts` sau locatorul, explică de ce.
-4. Locatori: preferă `getByRole`, `getByLabel`, `getByText`. Fără selectori CSS fragili sau `nth-child`.
+4. Locatori: **întâi id-ul** (`getByTestId`, configurat pe atributul `id`; locatorii sunt în `Pages/LocatorsPage/`,
+   verificările pe pagini în `Pages/`). Doar dacă elementul nu are id: `getByRole`, `getByLabel`, `getByText`.
+   Fără selectori CSS fragili sau `nth-child`.
    Fără `waitForTimeout` în afară de cazurile deja existente pentru validarea formularului.
 5. Nu dezactiva teste (`test.skip`/`fixme`) fără motiv scris în cod.
 6. Rulează `npm run typecheck` după orice modificare de cod.

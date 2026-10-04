@@ -1,72 +1,75 @@
-import { test, expect, PAGES, NAV_ITEMS, CONTACT, cookieBanner } from './fixtures/site';
+import { test, expect, PAGES, NAV_ITEMS, CONTACT } from './fixtures/site';
+import { CommonsLocators } from '../Pages/LocatorsPage';
+import { HomePage, PortfolioPage } from '../Pages';
 
+/** Locatorii sunt după id (getByTestId, vezi Pages/LocatorsPage); textul/rolul rămân doar unde site-ul nu are id. */
 test.describe('Navigare și elemente comune', () => {
   for (const p of PAGES) {
-    test(`meniul are toate linkurile corecte pe ${p.path}`, async ({ page, isMobile }) => {
+    test(`meniul are toate linkurile corecte pe ${p.path}`, async ({ page }) => {
       await page.goto(p.path);
-
-      // Pe mobil meniul poate fi ascuns sub un buton hamburger
-      if (isMobile) {
-        const toggle = page.getByRole('button', { name: /meniu|menu|navigat/i })
-          .or(page.locator('[aria-controls], .menu-toggle, .hamburger, .navbar-toggler').first());
-        if (await toggle.first().isVisible().catch(() => false)) await toggle.first().click();
-      }
-
+      const commons = new CommonsLocators(page);
       for (const item of NAV_ITEMS) {
-        const link = page.getByRole('navigation').getByRole('link', { name: item.label, exact: true })
-          .or(page.locator('header').getByRole('link', { name: item.label, exact: true }))
-          .first();
-        await expect(link, `link "${item.label}"`).toHaveAttribute('href', item.href);
+        await expect(commons.navLink(item.label), `link "${item.label}"`).toBeVisible();
+        await expect(commons.navLink(item.label), `href "${item.label}"`).toHaveAttribute('href', item.href);
       }
     });
 
     test(`footer: GDPR + WhatsApp pe ${p.path}`, async ({ page }) => {
       await page.goto(p.path);
-      const footer = page.locator('footer');
-      await expect(footer.getByRole('link', { name: /confiden|GDPR/i }).first()).toHaveAttribute('href', /\/gdpr\/?$/);
-      await expect(page.locator(`a[href*="wa.me"]`).first()).toHaveAttribute('href', CONTACT.whatsapp);
-      await expect(footer).toContainText(/DAURON TRUST SRL/);
+      const commons = new CommonsLocators(page);
+      await expect(commons.footerGdprLink).toHaveAttribute('href', /\/gdpr\/?$/);
+      await expect(commons.whatsappButton).toHaveAttribute('href', CONTACT.whatsapp);
+      await expect(commons.footer).toContainText(/DAURON TRUST SRL/);
     });
   }
 
-  test('click pe fiecare item din meniu duce la pagina corectă @smoke', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'navigarea prin click e acoperită pe desktop');
+  test('click pe fiecare item din meniu duce la pagina corectă @smoke', async ({ page }) => {
     await page.goto('/');
-    for (const item of NAV_ITEMS) {
-      await page.locator('header, nav').getByRole('link', { name: item.label, exact: true }).first().click();
+    const commons = new CommonsLocators(page);
+    for (const [i, item] of NAV_ITEMS.entries()) {
+      await commons.navLink(item.label).click();
       await expect(page).toHaveURL(item.href);
-      await expect(page.locator('h1').first()).toBeVisible();
+      await expect(page.getByTestId(PAGES[i].titleId), `titlul paginii ${item.label}`).toBeVisible();
     }
   });
 
   test('banner cookie-uri GDPR: „Accept” îl închide și alegerea se păstrează @smoke', async ({ page }) => {
     await page.goto('/');
-    const accept = cookieBanner(page);
-    await expect(accept, 'bannerul de cookie-uri trebuie afișat la prima vizită').toBeVisible();
-    await expect(page.getByRole('button', { name: 'Refuz', exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Politica de/i }).first()).toHaveAttribute('href', /\/gdpr\/?$/);
+    const commons = new CommonsLocators(page);
+    await expect(commons.cookieBanner, 'bannerul de cookie-uri trebuie afișat la prima vizită').toBeVisible();
+    await expect(commons.cookieAccept).toBeVisible();
+    await expect(commons.cookieRefuse).toBeVisible();
+    await expect(commons.cookiePolicyLink).toHaveAttribute('href', /\/gdpr\/?$/);
 
-    await accept.click();
-    await expect(accept).toBeHidden();
+    await commons.cookieAccept.click();
+    await expect(commons.cookieBanner).toBeHidden();
 
     await page.reload();
-    await expect(accept, 'după acceptare bannerul nu mai trebuie să reapară').toBeHidden();
+    await expect(commons.cookieBanner, 'după acceptare bannerul nu mai trebuie să reapară').toBeHidden();
+  });
+
+  test('banner cookie-uri GDPR: „Refuz” îl închide', async ({ page }) => {
+    await page.goto('/');
+    const commons = new CommonsLocators(page);
+    await commons.cookieRefuse.click();
+    await expect(commons.cookieBanner).toBeHidden();
   });
 
   test('logo duce la Home', async ({ page }) => {
     await page.goto('/contact/');
-    await page.getByRole('link', { name: /DAURON TRUST/i }).first().click();
-    await expect(page).toHaveURL(/dauron-trust\.com\/?$/);
+    await new CommonsLocators(page).logo.click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('home-title')).toBeVisible();
   });
 
   test('CTA-urile din Home: „Vezi portofoliul” și „Cere o ofertă” @smoke', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: /Vezi portofoliul/i }).click();
-    await expect(page).toHaveURL(/\/portfolio\/?$/);
-    await expect(page.locator('h1')).toBeVisible();
+    const home = new HomePage(page);
+    await home.open();
+    await home.openPortfolioFromCta();
+    await expect(new PortfolioPage(page).portfolio.title).toBeVisible();
 
-    await page.goto('/');
-    await page.getByRole('link', { name: /Cere o ofert/i }).click();
-    await expect(page).toHaveURL(/\/contact\/?$/);
+    await home.open();
+    await home.openOfferFromCta();
+    await expect(page.getByTestId('contact-title')).toBeVisible();
   });
 });

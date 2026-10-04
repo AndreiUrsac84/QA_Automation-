@@ -10,7 +10,7 @@ import { test, expect, PAGES } from './fixtures/site';
 test.describe('Regresie vizuală @visual', () => {
   for (const p of PAGES) {
     test(`snapshot ${p.path}`, async ({ page }) => {
-      await page.goto(p.path, { waitUntil: 'networkidle' });
+      await page.goto(p.path, { waitUntil: 'load' });
       await page.addStyleTag({ content: '*{animation:none!important;transition:none!important;caret-color:transparent!important}' });
       await expect(page).toHaveScreenshot(`${p.name.replace(/\W+/g, '-').toLowerCase()}.png`, {
         fullPage: true,

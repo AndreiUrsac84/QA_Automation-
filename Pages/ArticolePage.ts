@@ -12,8 +12,10 @@ export class ArticolePage extends BasePage {
 
   /** URL-urile unice ale articolelor din listă (fără pagina de listă și fără ancore). */
   async articleUrls(): Promise<string[]> {
-    const hrefs = await this.page.locator('a[href*="/articole/"]').evaluateAll((as) =>
-      as.map((a) => (a as HTMLAnchorElement).href.split('#')[0]).filter((h) => !/\/articole\/?$/.test(h)));
+    // evaluateAll nu așteaptă: fără asta lista poate fi goală dacă cardurile nu sunt încă randate
+    await this.articole.articleLinks.first().waitFor();
+    const hrefs = await this.articole.articleLinks.evaluateAll((as) =>
+      as.map((a) => (a as HTMLAnchorElement).href.split('#')[0]));
     return [...new Set(hrefs)];
   }
 
@@ -22,6 +24,7 @@ export class ArticolePage extends BasePage {
     const problems: string[] = [];
     const res = await this.page.goto(href);
     if (!res || res.status() >= 400) return [`${res?.status()} ${href}`];
+    if ((await this.articole.articleTitle.count()) !== 1) problems.push(`titlu articol (id) != 1 pe ${href}`);
     if ((await this.commons.h1.count()) !== 1) problems.push(`H1 != 1 pe ${href}`);
     const words = (await this.articole.articleBody.innerText()).split(/\s+/).length;
     if (words < 150) problems.push(`conținut prea scurt (${words} cuvinte) pe ${href}`);

@@ -2,6 +2,9 @@ import type { Page, Request } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { ContactLocators } from './LocatorsPage';
 
+/** Doar aceste trackere trec nemockuite; orice alt request non-GET (inclusiv alte servicii Google) este interceptat. */
+const TRACKERS = /googletagmanager\.com|google-analytics\.com|analytics\.google\.com|connect\.facebook\.net|facebook\.com\/tr/i;
+
 export type ContactData = { name?: string; email?: string; phone?: string; message?: string; gdpr?: boolean };
 
 export class ContactPage extends BasePage {
@@ -21,7 +24,7 @@ export class ContactPage extends BasePage {
     await this.page.route('**/*', async (route) => {
       const req = route.request();
       if (req.method() !== 'GET' && req.method() !== 'HEAD' && req.resourceType() !== 'ping'
-          && !/google|facebook|analytics/i.test(req.url())) {
+          && !TRACKERS.test(req.url())) {
         captured.push(req);
         return route.fulfill({
           status: 200,

@@ -1,14 +1,18 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import { CommonPages } from '../../Pages/CommonPages';
 
-/** Paginile principale ale site-ului. Actualizează aici când apare o pagină nouă. */
+/**
+ * Paginile principale ale site-ului. Actualizează aici când apare o pagină nouă (testul „sitemap vs PAGES” din
+ * seo.spec.ts pică dacă sitemap-ul conține o pagină care lipsește de aici).
+ * `titleId` = id-ul titlului paginii (H1) – verificat primul, înaintea rolului/textului.
+ */
 export const PAGES = [
-  { path: '/', name: 'Home', titleRe: /DAURON TRUST/i },
-  { path: '/about/', name: 'About Us', titleRe: /DAURON TRUST/i },
-  { path: '/portfolio/', name: 'Portofoliu', titleRe: /Portofoliu/i },
-  { path: '/articole/', name: 'Articole', titleRe: /Articole/i },
-  { path: '/contact/', name: 'Contact', titleRe: /Contact/i },
-  { path: '/gdpr/', name: 'GDPR', titleRe: /DAURON TRUST|confiden/i },
+  { path: '/', name: 'Home', titleId: 'home-title', titleRe: /DAURON TRUST SRL.*Proiectare Construc/i },
+  { path: '/about/', name: 'About Us', titleId: 'about-title', titleRe: /Despre noi.*DAURON TRUST/i },
+  { path: '/portfolio/', name: 'Portofoliu', titleId: 'portfolio-title', titleRe: /Portofoliu.*DAURON TRUST/i },
+  { path: '/articole/', name: 'Articole', titleId: 'articole-title', titleRe: /Articole.*DAURON TRUST/i },
+  { path: '/contact/', name: 'Contact', titleId: 'contact-title', titleRe: /Contact.*DAURON TRUST/i },
+  { path: '/gdpr/', name: 'GDPR', titleId: 'gdpr-title', titleRe: /Politica de confiden.*DAURON TRUST/i },
 ] as const;
 
 export const NAV_ITEMS = [
@@ -83,7 +87,11 @@ export async function brokenImages(page: Page): Promise<string[]> {
     await new Promise((r) => setTimeout(r, 500));
     window.scrollTo(0, 0);
   });
-  await page.waitForLoadState('networkidle').catch(() => {});
+  // site-ul Next.js nu atinge niciodată „networkidle” (prefetch continuu): așteptăm să se termine imaginile vizibile în DOM
+  await page.waitForLoadState('load');
+  await page
+    .waitForFunction(() => Array.from(document.images).every((img) => img.complete), undefined, { timeout: 8_000 })
+    .catch(() => {});
   return page.evaluate(() =>
     Array.from(document.images)
       .filter((img) => img.complete && img.naturalWidth === 0 && img.src)

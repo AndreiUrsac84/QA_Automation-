@@ -1,4 +1,5 @@
 import { test, expect, PAGES } from './fixtures/site';
+import { ArticolePage } from '../Pages';
 
 test.describe('SEO tehnic', () => {
   for (const p of PAGES) {
@@ -54,6 +55,27 @@ test.describe('SEO tehnic', () => {
     const sitemap = await request.get(sitemapUrl);
     expect(sitemap.status(), `sitemap la ${sitemapUrl}`).toBe(200);
     expect(await sitemap.text()).toMatch(/<urlset|<sitemapindex/);
+  });
+
+  test('acoperire: paginile din sitemap sunt în PAGES, iar articolele din sitemap apar în listă', async ({ page, request }) => {
+    const res = await request.get('/sitemap.xml');
+    expect(res.status(), 'sitemap.xml').toBe(200);
+    const paths = [...(await res.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1].trim()).pathname);
+    const isArticle = (p: string) => /^\/articole\/[^/]+\/?$/.test(p);
+    const norm = (p: string) => p.replace(/\/?$/, '/');
+
+    const known = new Set(PAGES.map((p) => norm(p.path)));
+    const missing = paths.filter((p) => !isArticle(p) && !known.has(norm(p)));
+    expect(missing, 'pagini din sitemap care lipsesc din PAGES (tests/fixtures/site.ts)').toEqual([]);
+    const inSitemap = new Set(paths.map(norm));
+    const notInSitemap = PAGES.filter((p) => !inSitemap.has(norm(p.path))).map((p) => p.path);
+    expect(notInSitemap, 'pagini din PAGES care lipsesc din sitemap').toEqual([]);
+
+    const articole = new ArticolePage(page);
+    await articole.open();
+    const listed = new Set((await articole.articleUrls()).map((u) => norm(new URL(u).pathname)));
+    const unlisted = paths.filter(isArticle).filter((p) => !listed.has(norm(p)));
+    expect(unlisted, 'articole din sitemap care nu apar în lista /articole/').toEqual([]);
   });
 
   test('toate URL-urile din sitemap răspund 200', async ({ request }) => {

@@ -1,4 +1,5 @@
 import { test, expect, PAGES, brokenImages } from './fixtures/site';
+import { CommonsLocators } from '../Pages/LocatorsPage';
 
 test.describe('Smoke – toate paginile principale @smoke', () => {
   for (const p of PAGES) {
@@ -9,8 +10,9 @@ test.describe('Smoke – toate paginile principale @smoke', () => {
       expect(response!.status(), `status HTTP pentru ${p.path}`).toBeLessThan(400);
 
       await expect(page).toHaveTitle(p.titleRe);
-      await expect(page.locator('h1').first()).toBeVisible();
-      await expect(page.getByRole('img', { name: /DAURON TRUST logo/i }).first()).toBeVisible();
+      await expect(page.getByTestId(p.titleId), `titlul paginii (id ${p.titleId})`).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+      await expect(new CommonsLocators(page).logoImage, 'logo în meniu').toBeVisible();
 
       const broken = await brokenImages(page);
       expect(broken, 'imagini rupte').toEqual([]);
