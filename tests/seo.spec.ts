@@ -102,7 +102,8 @@ test.describe('SEO tehnic', () => {
     test.slow();
     const res = await request.get('/sitemap.xml');
     test.skip(!res.ok(), 'sitemap.xml lipsește');
-    const urls = [...(await res.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
+    // sitemap-ul are mereu adrese absolute de producție; verificăm aceeași cale pe ținta testată (beta local / staging)
+    const urls = [...(await res.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1].trim()).pathname);
     const failed: string[] = [];
     for (const u of urls) {
       const r = await request.get(u, { maxRedirects: 0 });
