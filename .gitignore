@@ -1,10 +1,14 @@
 node_modules/
+.env
+
+# Rezultatele testelor rămân doar local, nu se pun în repo
 test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
-.env
 *.log
+# referințele vizuale (generate pe fiecare mașină / OS, npm run test:visual:update)
+tests/__screenshots__/
 
 # Docker: setări și scripturi doar locale (docker/README.md), nu se pun în repo
 /docker/
