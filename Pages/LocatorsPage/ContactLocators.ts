@@ -27,6 +27,10 @@ export class ContactLocators {
   get gdprPolicyLink(): Locator { return this.page.getByTestId('contact-link-gdpr'); }
   get submitButton(): Locator { return this.page.getByTestId('contact-submit-button'); }
 
+  // Mesaje de eroare (validarea se face în JS, nu prin HTML5: câmpul de email este type="text")
+  get emailError(): Locator { return this.page.getByTestId('contact-email-error'); }
+  get statusError(): Locator { return this.page.getByTestId('contact-status-error'); }
+
   // Etichetele câmpurilor
   get nameLabel(): Locator { return this.page.getByTestId('contact-name-label'); }
   get emailLabel(): Locator { return this.page.getByTestId('contact-email-label'); }

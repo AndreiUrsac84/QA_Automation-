@@ -35,6 +35,9 @@ test.describe('Responsive', () => {
     const small = await page.$$eval('a, button', (els) =>
       els
         .filter((e) => (e as HTMLElement).offsetParent !== null)
+        // linkurile inline dintr-o propoziție sunt exceptate de WCAG 2.5.8 (ex. linkul din textul bannerului de cookie-uri)
+        .filter((e) => !(getComputedStyle(e).display === 'inline'
+          && Array.from(e.parentElement?.childNodes ?? []).some((n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim())))
         .map((e) => ({ t: (e.textContent || e.getAttribute('aria-label') || '').trim().slice(0, 30), r: e.getBoundingClientRect() }))
         .filter(({ r }) => r.width > 0 && (r.width < 24 || r.height < 24))
         .map(({ t, r }) => `${t} ${Math.round(r.width)}x${Math.round(r.height)}`),

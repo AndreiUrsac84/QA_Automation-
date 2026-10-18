@@ -19,7 +19,7 @@ export class HomePage extends BasePage {
 
   async openPortfolioFromCta(): Promise<void> {
     await this.home.ctaPortfolio.click();
-    await expect(this.page).toHaveURL(/\/portfolio\/?$/);
+    await expect(this.page).toHaveURL(/\/portofoliu\/?$/);
   }
 
   async openOfferFromCta(): Promise<void> {

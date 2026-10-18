@@ -4,3 +4,7 @@ playwright-report/
 blob-report/
 playwright/.cache/
 .env
+*.log
+
+# Docker: setări și scripturi doar locale (docker/README.md), nu se pun în repo
+/docker/

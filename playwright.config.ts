@@ -22,12 +22,14 @@ function isReachable(url: string): boolean {
 }
 
 /**
- * BASE_URL = ținta principală (ex. Docker local). Dacă nu răspunde și există BASE_URL_FALLBACK (ex. producția),
- * testele rulează pe fallback. Fără BASE_URL se folosește producția.
+ * BASE_URL = ținta principală (implicit producția). Dacă nu răspunde și există BASE_URL_FALLBACK (ex. Docker local),
+ * testele rulează pe fallback.
  */
 const PRIMARY_URL = process.env.BASE_URL ?? 'https://dauron-trust.com';
 const FALLBACK_URL = process.env.BASE_URL_FALLBACK;
 const BASE_URL = FALLBACK_URL && !isReachable(PRIMARY_URL) ? FALLBACK_URL : PRIMARY_URL;
+// ținta rezolvată, pentru fixtures/site.ts (lista articolelor se citește din sitemap-ul ei la colectarea testelor)
+process.env.E2E_BASE_URL = BASE_URL;
 if (!process.env.TEST_WORKER_INDEX) console.error(`[config] BASE_URL = ${BASE_URL}${BASE_URL === PRIMARY_URL ? '' : ` (fallback; ${PRIMARY_URL} nu răspunde)`}`);
 // HEADLESS=true pentru rulare fără fereastră (implicit: browser vizibil)
 const HEADLESS = process.env.HEADLESS === 'true' || !!process.env.CI;
@@ -61,7 +63,8 @@ export default defineConfig({
     navigationTimeout: 30_000,
     extraHTTPHeaders: { 'X-E2E-Test': 'dauron-trust-e2e' },
   },
-  snapshotPathTemplate: '{testDir}/__screenshots__/{projectName}/{arg}{ext}',
+  // {platform}: referințele diferă pe OS (fonturi); cele din Docker/CI ajung în __screenshots__/linux/
+  snapshotPathTemplate: '{testDir}/__screenshots__/{platform}/{projectName}/{arg}{ext}',
   projects: [
     { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] }, testIgnore: /visual\.spec|tour\.spec/ },
     { name: 'mobile-chrome', use: { ...devices['Pixel 7'] }, testIgnore: /visual\.spec|tour\.spec/ },

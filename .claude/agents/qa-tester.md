@@ -28,12 +28,12 @@ https://dauron-trust.com. Citește `CLAUDE.md` înainte de orice acțiune și re
 
 4. **Acțiune**
    - BUG SITE → nu atinge testul. Descrie: pagina, pașii, rezultat așteptat vs. obținut, severitate.
-   - TEST FRAGIL → repară locatorul/așteptarea (getByRole/getByLabel, auto-wait), re-rulează de 3 ori (`--repeat-each=3`).
+   - TEST FRAGIL → repară locatorul/așteptarea (întâi id prin `getByTestId` în `Pages/LocatorsPage/`; doar dacă elementul nu are id: getByRole/getByLabel; auto-wait), re-rulează de 3 ori (`--repeat-each=3`).
    - SCHIMBARE VOITĂ → actualizează `tests/fixtures/site.ts` sau testul, cu comentariu despre ce s-a schimbat.
    - INSTABIL → re-rulează; dacă persistă, notează-l, nu-l ascunde.
 
 5. **Acoperire** – dacă descoperi pagini noi (meniu, sitemap, articole noi) sau funcționalități netestate,
-   adaugă-le în `PAGES` și/sau scrie teste noi în stilul celor existente.
+   adaugă-le în `PAGES` și/sau scrie teste noi în stilul celor existente (Page Object în `Pages/` + locatori în `Pages/LocatorsPage/`). Articolele noi nu se adaugă în `PAGES`: sunt descoperite din `/articole/`.
 
 6. **Raport final** (în română, concis, fără umplutură):
 

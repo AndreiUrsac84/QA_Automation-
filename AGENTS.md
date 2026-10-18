@@ -19,7 +19,7 @@ Limba: **română** – comentarii, mesaje de assert, commit-uri, rapoarte.
 | Agent `qa-tester` | `.claude/agents/qa-tester.md` | Rulează suita, clasifică eșecurile, repară teste fragile, scrie teste noi, raportează |
 | Comanda `/test-site` | `.claude/commands/test-site.md` | Pornește `qa-tester` cu nivel: `smoke` (implicit), `full`, `visual` sau un fișier spec |
 | Permisiuni | `.claude/settings.json` | Allowlist pentru npm/playwright; **deny** pentru submit live și update de snapshot-uri |
-| CI | `.github/workflows/e2e.yml` | Rulare zilnică + manuală; opțional triage automat cu Claude |
+| CI | `.github/workflows/e2e.yml` | Rulare de 3 ori pe zi + manuală + push pe master (https://dauron-trust.com); opțional triage automat cu Claude |
 
 Când să folosești ce:
 - „testează site-ul”, după o modificare a site-ului → `/test-site smoke` sau `qa-tester`.
@@ -131,7 +131,7 @@ Raportează fidel: dacă ceva a picat sau nu a fost rulat, spune-o explicit, cu 
 
 ## 9. CI (GitHub Actions)
 
-- Declanșatori: zilnic 04:17 UTC, manual (`workflow_dispatch`, input `suite`: `smoke`|`full`) și push pe `main`.
+- Declanșatori: cron 04:17, 10:17 și 16:17 UTC, manual (`workflow_dispatch`, input `suite`: `smoke`|`full`|`tour`) și push pe `master`.
 - Rulează `typecheck`, apoi testele; încarcă `playwright-report/` și `test-results/` ca artefacte (14 zile).
 - Job-ul `claude-triage` pornește doar la eșec și dacă variabila `CLAUDE_TRIAGE=true`; necesită secretul `ANTHROPIC_API_KEY`.
   Deschide **issue** pentru buguri de site și **PR** pentru teste fragile – aceleași reguli ca la §4 și §6.

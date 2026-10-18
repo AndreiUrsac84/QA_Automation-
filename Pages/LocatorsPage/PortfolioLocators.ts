@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 
-/** Locatori pagina Portofoliu (/portfolio/), după id. */
+/** Locatori pagina Portofoliu (/portofoliu/), după id. */
 export class PortfolioLocators {
   /** Categoriile de proiecte: numele afișat și id-ul titlului (H2). */
   static readonly CATEGORIES = [

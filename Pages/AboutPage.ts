@@ -7,7 +7,7 @@ export class AboutPage extends BasePage {
   readonly about: AboutLocators;
 
   constructor(page: Page) {
-    super(page, '/about/');
+    super(page, '/despre-noi/');
     this.about = new AboutLocators(page);
   }
 

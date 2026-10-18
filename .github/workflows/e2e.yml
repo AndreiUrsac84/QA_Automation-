@@ -1,20 +1,42 @@
 name: E2E dauron-trust.com
 
+# Setul CI (npm run test:ci) = Smoke + SEO + Search pe cele 6 pagini principale și pe toate articolele din sitemap.
+# Rulează la fiecare push / pull request. Programat (de 3 ori pe zi) rulează suita completă, fără linkurile externe;
+# linkurile externe (@extern) au job separat, care doar raportează (depind de terți, nu blochează).
 on:
   schedule:
     - cron: '17 4,10,16 * * *'   # de 3 ori pe zi: 07:17, 13:17, 19:17 ora României (vară)
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
   workflow_dispatch:
     inputs:
       suite:
-        description: 'tour | smoke | full'
-        default: 'tour'
-  push:
-    branches: [main]
+        description: 'Setul de teste'
+        type: choice
+        options: [ci, smoke, full, extern, visual, tour]
+        default: ci
+      base_url:
+        description: 'Mediul țintă (gol = producția)'
+        required: false
+        default: ''
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: 'true'
+  BASE_URL: ${{ github.event.inputs.base_url || 'https://dauron-trust.com' }}
+  PAGE_PAUSE_MS: '0'   # fără pauza de 1s după fiecare goto (utilă doar când urmărești testul)
+  WORKERS: '4'         # runner-ele ubuntu-latest au 4 vCPU
 
 jobs:
   e2e:
+    if: github.event.inputs.suite != 'extern'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,15 +44,52 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run typecheck
-      - name: Teste
+      - name: Browsere Playwright
         run: |
-          if [ "${{ github.event.inputs.suite }}" = "smoke" ]; then npm run test:smoke; else npm test; fi
+          case "${{ github.event.inputs.suite }}" in
+            visual) npx playwright install --with-deps chromium ;;
+            *) npx playwright install --with-deps chromium firefox webkit ;;
+          esac
+      - run: npm run typecheck
+      - name: Teste (${{ github.event.inputs.suite || (github.event_name == 'schedule' && 'full') || 'ci' }})
+        run: |
+          SUITE="${{ github.event.inputs.suite }}"
+          [ -z "$SUITE" ] && { [ "${{ github.event_name }}" = "schedule" ] && SUITE=full || SUITE=ci; }
+          case "$SUITE" in
+            ci) npm run test:ci ;;
+            smoke) npm run test:smoke ;;
+            full) npm test -- --grep-invert @extern ;;
+            visual) npm run test:visual ;;
+            tour) npm run test:tour:once ;;
+          esac
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  # Linkuri externe: depind de site-uri terțe (anti-bot, rate limit), deci doar raportează, nu pică workflow-ul.
+  extern:
+    if: github.event_name == 'schedule' || github.event.inputs.suite == 'extern'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:extern
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-extern
           path: |
             playwright-report/
             test-results/

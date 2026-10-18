@@ -56,8 +56,4 @@ export class ContactPage extends BasePage {
   async isFormValid(): Promise<boolean> {
     return this.contact.form.evaluate((el) => (el as HTMLFormElement).checkValidity());
   }
-
-  async isEmailFieldValid(): Promise<boolean> {
-    return this.contact.emailInput.evaluate((el) => (el as HTMLInputElement).validity.valid);
-  }
 }

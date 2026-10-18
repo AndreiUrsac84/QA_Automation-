@@ -7,7 +7,7 @@ export class PortfolioPage extends BasePage {
   readonly portfolio: PortfolioLocators;
 
   constructor(page: Page) {
-    super(page, '/portfolio/');
+    super(page, '/portofoliu/');
     this.portfolio = new PortfolioLocators(page);
   }
 

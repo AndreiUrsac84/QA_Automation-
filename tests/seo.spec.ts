@@ -1,8 +1,11 @@
-import { test, expect, PAGES } from './fixtures/site';
+import { test, expect, PAGES, ARTICLES } from './fixtures/site';
 import { ArticolePage } from '../Pages';
 
+/** Paginile principale + toate articolele din sitemap: verificările SEO on-page rulează pe fiecare. */
+const SEO_PAGES = [...PAGES.map((p) => p.path), ...ARTICLES.map((a) => a.path)].map((path) => ({ path }));
+
 test.describe('SEO tehnic', () => {
-  for (const p of PAGES) {
+  for (const p of SEO_PAGES) {
     test(`meta tags pe ${p.path}`, async ({ page }) => {
       await page.goto(p.path);
 
@@ -21,6 +24,9 @@ test.describe('SEO tehnic', () => {
 
       expect(await page.locator('h1').count(), 'exact un H1 pe pagină').toBe(1);
 
+      const noAlt = await page.locator('img:not([alt])').evaluateAll((imgs) => imgs.map((i) => (i as HTMLImageElement).src));
+      expect.soft(noAlt, 'imagini fără atribut alt').toEqual([]);
+
       const robots = await page.locator('meta[name="robots"]').getAttribute('content');
       if (robots) expect(robots).not.toMatch(/noindex/i);
     });
@@ -37,11 +43,25 @@ test.describe('SEO tehnic', () => {
   }
 
   test('og:url corespunde paginii curente', async ({ page }) => {
-    for (const p of PAGES) {
+    test.slow();
+    for (const p of SEO_PAGES) {
       await page.goto(p.path);
-      const ogUrl = await page.locator('meta[property="og:url"]').getAttribute('content');
+      // og:url e opțional: getAttribute() pe un meta inexistent ar aștepta tot timeout-ul, deci verificăm întâi dacă există
+      const ogMeta = page.locator('meta[property="og:url"]');
+      if ((await ogMeta.count()) === 0) continue;
+      const ogUrl = await ogMeta.getAttribute('content');
       if (!ogUrl) continue;
       expect.soft(new URL(ogUrl).pathname, `og:url pe ${p.path}`).toBe(new URL(page.url()).pathname);
+    }
+  });
+
+  // În release-ul din 2026-10 /about/ și /portfolio/ au devenit /despre-noi/ și /portofoliu/; adresele vechi trebuie
+  // să rămână redirecționate 301, ca linkurile externe și indexarea Google să nu se piardă.
+  test('adresele vechi redirecționează 301 către cele noi @smoke', async ({ request }) => {
+    for (const [oldPath, newPath] of [['/about/', '/despre-noi/'], ['/portfolio/', '/portofoliu/']]) {
+      const res = await request.get(oldPath, { maxRedirects: 0 });
+      expect.soft(res.status(), `status ${oldPath}`).toBe(301);
+      expect.soft(new URL(res.headers()['location'] ?? '', res.url()).pathname, `Location ${oldPath}`).toBe(newPath);
     }
   });
 

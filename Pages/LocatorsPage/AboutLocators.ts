@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 
-/** Locatori pagina About Us (/about/), după id. */
+/** Locatori pagina About Us (/despre-noi/), după id. */
 export class AboutLocators {
   constructor(private readonly page: Page) {}
 

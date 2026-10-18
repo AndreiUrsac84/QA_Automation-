@@ -56,8 +56,10 @@ test.describe('Pagina Contact', () => {
     await contactPage.submit();
     await page.waitForTimeout(800);
 
-    expect(await contactPage.isEmailFieldValid()).toBe(false);
-    expect(captured).toHaveLength(0);
+    // site-ul validează emailul în JS (câmpul e type="text"), deci verificăm mesajul afișat, nu validity HTML5
+    await expect(contactPage.contact.emailError, 'mesajul de eroare de sub câmpul email').toBeVisible();
+    await expect(contactPage.contact.statusError, 'mesajul de eroare al formularului').toBeVisible();
+    expect(captured, 'cu email invalid nu trebuie să plece niciun request').toHaveLength(0);
   });
 
   test('fără acord GDPR formularul nu se trimite', async ({ page }) => {
