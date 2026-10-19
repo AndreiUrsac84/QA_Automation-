@@ -23,9 +23,12 @@ Limba: română, în comentarii, mesaje de assert și rapoarte.
 - `tests/contact.spec.ts` – date contact + formular (validări, GDPR, submit **mock**)
 - `tests/seo.spec.ts` – meta, OG, H1 unic, canonical, lang, robots.txt, sitemap.xml
 - `tests/links.spec.ts` – crawler linkuri rupte (interne + externe)
-- `tests/content.spec.ts` – articole (fiecare deschis și verificat), portofoliu, home. Site-ul are 6 pagini principale
-  și ~28 de articole (`/articole/<slug>/`, toate în sitemap, 34 URL-uri în total); articolele NU se listează în `PAGES`,
-  se descoperă din `/articole/` (`ArticolePage.articleUrls()`).
+- `tests/content.spec.ts` – articole (fiecare deschis și verificat), portofoliu, home. Site-ul are 6 pagini principale,
+  6 specialități (`/specialitati/<slug>/`), 5 subiecte (`/articole/subiect/<slug>/`) – toate 17 în `PAGES` – și ~28 de
+  articole (`/articole/<slug>/`). Articolele NU se listează în `PAGES`: `/articole/` arată doar o parte, restul sunt pe
+  paginile de subiect (`ArticolePage.articleUrls()` le adună de pe toate). Din 2026-10 site-ul e multilingv: fiecare
+  pagină are și `/<limbă>/<cale>/` (`LANGUAGES` = en, it, es, de, hu; ~270 URL-uri în sitemap); traducerile nu intră în
+  `PAGES`, `seo.spec.ts` le verifică lang, canonical și hreflang.
 - `tests/a11y-responsive.spec.ts` – axe WCAG 2.1 AA, overflow orizontal, ținte touch
 - `tests/visual.spec.ts` – regresie vizuală (rulare separată)
 
