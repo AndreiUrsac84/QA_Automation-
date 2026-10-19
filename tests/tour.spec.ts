@@ -1,5 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-import { PAGES, NAV_ITEMS } from './fixtures/site';
+import { expect, type Page } from '@playwright/test';
+import { baseTest as test, PAGES, NAV_ITEMS } from './fixtures/site';
 import { CommonPages } from '../Pages/CommonPages';
 import { ArticolePage } from '../Pages/ArticolePage';
 

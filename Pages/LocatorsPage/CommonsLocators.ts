@@ -25,6 +25,19 @@ export class CommonsLocators {
   }
   get h1(): Locator { return this.page.getByRole('heading', { level: 1 }); }
 
+  // Meniul Articole (▾): subiectele articolelor
+  get subjectsButton(): Locator { return this.page.getByTestId('menu-articole-button'); }
+  get subjectsDropdown(): Locator { return this.page.getByTestId('menu-articole-dropdown'); }
+  /** Linkul spre /articole/subiect/<slug>/; id-ul are forma menu-articole-<slug>-link. */
+  subjectLink(slug: string): Locator { return this.page.getByTestId(`menu-articole-${slug}-link`); }
+  get allArticlesLink(): Locator { return this.page.getByTestId('menu-articole-toate-link'); }
+
+  // Meniul de limbă
+  get languageButton(): Locator { return this.page.getByTestId('menu-limba-button'); }
+  get languageDropdown(): Locator { return this.page.getByTestId('menu-limba-dropdown'); }
+  /** Linkul spre aceeași pagină în limba dată (ro, en, it, es, de, hu). */
+  languageLink(lang: string): Locator { return this.page.getByTestId(`menu-limba-link-${lang}`); }
+
   // Footer
   get footer(): Locator { return this.page.getByTestId('footer'); }
   get footerGdprLink(): Locator { return this.page.getByTestId('footer-link-gdpr'); }

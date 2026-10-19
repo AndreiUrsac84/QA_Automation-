@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type APIResponse, type Page } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { CommonPages } from '../../Pages/CommonPages';
 
@@ -11,10 +11,36 @@ export const PAGES = [
   { path: '/', name: 'Home', titleId: 'home-title', titleRe: /DAURON TRUST SRL.*Proiectare Construc/i },
   { path: '/despre-noi/', name: 'About Us', titleId: 'about-title', titleRe: /Despre noi.*DAURON TRUST/i },
   { path: '/portofoliu/', name: 'Portofoliu', titleId: 'portfolio-title', titleRe: /Portofoliu.*DAURON TRUST/i },
-  { path: '/articole/', name: 'Articole', titleId: 'articole-title', titleRe: /Articole.*DAURON TRUST/i },
+  { path: '/articole/', name: 'Articole', titleId: 'articole-title', titleRe: /Ghiduri despre construc.*DAURON TRUST/i },
   { path: '/contact/', name: 'Contact', titleId: 'contact-title', titleRe: /Contact.*DAURON TRUST/i },
   { path: '/gdpr/', name: 'GDPR', titleId: 'gdpr-title', titleRe: /Politica de confiden.*DAURON TRUST/i },
+  // Specialitățile (/specialitati/<slug>/), apărute în release-ul multilingv din 2026-10
+  { path: '/specialitati/arhitectura/', name: 'Specialitate Arhitectura', titleId: 'specialitate-arhitectura-titlu', titleRe: /Arhitectur.*DAURON TRUST/i },
+  { path: '/specialitati/edilitare/', name: 'Specialitate Edilitare', titleId: 'specialitate-edilitare-titlu', titleRe: /Proiecte edilitare.*DAURON TRUST/i },
+  { path: '/specialitati/elemente-arhitecturale/', name: 'Specialitate Elemente arhitecturale', titleId: 'specialitate-elemente-arhitecturale-titlu', titleRe: /Elemente arhitecturale.*DAURON TRUST/i },
+  { path: '/specialitati/geotehnic/', name: 'Specialitate Geotehnic', titleId: 'specialitate-geotehnic-titlu', titleRe: /Studii geotehnice.*DAURON TRUST/i },
+  { path: '/specialitati/instalatii/', name: 'Specialitate Instalatii', titleId: 'specialitate-instalatii-titlu', titleRe: /Instala.*DAURON TRUST/i },
+  { path: '/specialitati/verificatori-experti/', name: 'Specialitate Verificatori experti', titleId: 'specialitate-verificatori-experti-titlu', titleRe: /Verificatori.*DAURON TRUST/i },
+  // Subiectele din /articole/ (ghidurile grupate pe temă)
+  { path: '/articole/subiect/construiesc-o-casa/', name: 'Subiect Construiesc o casa', titleId: 'subiect-construiesc-o-casa-title', titleRe: /construiesc o cas.*DAURON TRUST/i },
+  { path: '/articole/subiect/constructie-fara-autorizatie/', name: 'Subiect Constructie fara autorizatie', titleId: 'subiect-constructie-fara-autorizatie-title', titleRe: /f.r. autoriza.*DAURON TRUST/i },
+  { path: '/articole/subiect/ce-s-a-schimbat-in-lege/', name: 'Subiect Ce s-a schimbat in lege', titleId: 'subiect-ce-s-a-schimbat-in-lege-title', titleRe: /schimbat .n lege.*DAURON TRUST/i },
+  { path: '/articole/subiect/reguli-pentru-zona-mea/', name: 'Subiect Reguli pentru zona mea', titleId: 'subiect-reguli-pentru-zona-mea-title', titleRe: /zona mea.*DAURON TRUST/i },
+  { path: '/articole/subiect/siguranta-si-rezistenta/', name: 'Subiect Siguranta si rezistenta', titleId: 'subiect-siguranta-si-rezistenta-title', titleRe: /rezisten.*DAURON TRUST/i },
 ] as const;
+
+/**
+ * Limbile traduse ale site-ului: fiecare pagină și articol are și versiunea /<limbă>/<cale>/ (româna e fără prefix).
+ * Traducerile nu se listează în PAGES; seo.spec.ts verifică pe ele lang, canonical și hreflang.
+ */
+export const LANGUAGES = ['en', 'it', 'es', 'de', 'hu'] as const;
+const LANG_PREFIX = new RegExp(`^/(${LANGUAGES.join('|')})(?=/)`);
+
+/** Calea în română a unei pagini traduse (/en/contact/ → /contact/) și limba ei; pentru o cale română, lang = 'ro'. */
+export function splitLanguage(path: string): { lang: string; path: string } {
+  const m = path.match(LANG_PREFIX);
+  return m ? { lang: m[1], path: path.slice(m[0].length) } : { lang: 'ro', path };
+}
 
 /**
  * Articolele (/articole/<slug>/), citite din sitemap.xml al țintei la colectarea testelor, ca fiecare articol să aibă
@@ -62,7 +88,64 @@ type Fixtures = {
 };
 
 /** După fiecare page.goto() rămâne PAGE_PAUSE_MS pe pagină (1s implicit; PAGE_PAUSE_MS=0 dezactivează). */
-const withPagePause = base.extend<{ page: Page }>({
+/**
+ * Testare locală (beta în Docker, staging): site-ul conține și adrese absolute de producție – linkul de copyright din
+ * footer, redirecturile /about/ și /portfolio/ din .htaccess. Ca testele locale să nu ajungă pe live, orice cerere spre
+ * dauron-trust.com (navigare, click, redirect, request HTTP din test) e trimisă la ținta testată. Pe live nu se schimbă nimic.
+ */
+const LIVE_HOST = /^https?:\/\/(www\.)?dauron-trust\.com(?=[/?#]|$)/i;
+const TARGET_ORIGIN = new URL(process.env.E2E_BASE_URL ?? process.env.BASE_URL ?? 'https://dauron-trust.com').origin;
+export const IS_LIVE_TARGET = LIVE_HOST.test(TARGET_ORIGIN);
+
+/** Adresa de producție → aceeași cale pe ținta testată (pe live sau pentru alte adrese întoarce URL-ul neschimbat). */
+export function toTarget(url: string): string {
+  return IS_LIVE_TARGET ? url : url.replace(LIVE_HOST, TARGET_ORIGIN);
+}
+
+type RequestMethod = 'get' | 'head' | 'post' | 'put' | 'patch' | 'delete' | 'fetch';
+const REQUEST_METHODS = new Set<string>(['get', 'head', 'post', 'put', 'patch', 'delete', 'fetch']);
+
+/** Fixture-uri fără pauză după goto (folosite direct de tour.spec.ts, care are pauzele lui). */
+export const baseTest = base.extend({
+  context: async ({ context }, use) => {
+    if (!IS_LIVE_TARGET) {
+      // route.continue() nu poate schimba protocolul (https → http), deci cererea se face spre țintă și răspunsul se
+      // întoarce browserului; redirecturile rămân la browser (maxRedirects: 0), iar următoarea cerere trece tot pe aici
+      await context.route(LIVE_HOST, async (route) => {
+        const response = await route.fetch({ url: toTarget(route.request().url()), maxRedirects: 0 }).catch(() => null);
+        if (response) await route.fulfill({ response });
+        else await route.abort();
+      });
+    }
+    await use(context);
+  },
+  request: async ({ request }, use) => {
+    if (IS_LIVE_TARGET) return use(request);
+    // request.get('/x') rămâne relativ; adresele absolute de producție și redirecturile spre producție merg pe țintă
+    const local = new Proxy(request, {
+      get(target, prop, receiver) {
+        const value = Reflect.get(target, prop, receiver);
+        if (typeof prop !== 'string' || !REQUEST_METHODS.has(prop)) return typeof value === 'function' ? value.bind(target) : value;
+        const method = (value as (url: string, options?: object) => Promise<APIResponse>).bind(target);
+        return async (url: string, options: { maxRedirects?: number } = {}) => {
+          if (typeof url !== 'string') return method(url, options);
+          const maxRedirects = options.maxRedirects ?? 20;
+          let current = toTarget(url);
+          for (let hop = 0; ; hop++) {
+            const res = await method(current, { ...options, maxRedirects: 0 });
+            const location = res.headers()['location'];
+            const isRedirect = res.status() >= 300 && res.status() < 400 && location;
+            if (!isRedirect || maxRedirects === 0 || hop >= maxRedirects) return res;
+            current = toTarget(new URL(location, res.url()).href);
+          }
+        };
+      },
+    }) as typeof request & Record<RequestMethod, unknown>;
+    await use(local);
+  },
+});
+
+const withPagePause = baseTest.extend<{ page: Page }>({
   page: async ({ page }, use) => {
     const goto = page.goto.bind(page);
     page.goto = (async (url, options) => {

@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { ArticoleLocators } from './LocatorsPage';
 
@@ -10,13 +10,25 @@ export class ArticolePage extends BasePage {
     this.articole = new ArticoleLocators(page);
   }
 
-  /** URL-urile unice ale articolelor din listă (fără pagina de listă și fără ancore). */
+  /**
+   * URL-urile unice ale tuturor articolelor (fără ancore), apelat pe /articole/. Din release-ul din 2026-10, /articole/
+   * arată doar o parte din articole, restul sunt pe paginile de subiect: le deschide pe rând, deci pagina rămâne pe
+   * ultimul subiect.
+   */
   async articleUrls(): Promise<string[]> {
-    // evaluateAll nu așteaptă: fără asta lista poate fi goală dacă cardurile nu sunt încă randate
-    await this.articole.articleLinks.first().waitFor();
-    const hrefs = await this.articole.articleLinks.evaluateAll((as) =>
-      as.map((a) => (a as HTMLAnchorElement).href.split('#')[0]));
+    const hrefs = await this.cardUrls(this.articole.articleLinks);
+    const subjects = await this.articole.subjectLinks.evaluateAll((as) => as.map((a) => (a as HTMLAnchorElement).href));
+    for (const subject of new Set(subjects)) {
+      await this.page.goto(subject);
+      hrefs.push(...(await this.cardUrls(this.articole.subjectArticleLinks)));
+    }
     return [...new Set(hrefs)];
+  }
+
+  private async cardUrls(cards: Locator): Promise<string[]> {
+    // evaluateAll nu așteaptă: fără asta lista poate fi goală dacă cardurile nu sunt încă randate
+    await cards.first().waitFor();
+    return cards.evaluateAll((as) => as.map((a) => (a as HTMLAnchorElement).href.split('#')[0]));
   }
 
   /** Deschide un articol și întoarce problemele găsite (listă goală = articol valid). */

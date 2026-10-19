@@ -10,6 +10,12 @@ export class ArticoleLocators {
   get articleLinks(): Locator {
     return this.list.getByRole('link').and(this.page.getByTestId(/^articole-card-[a-z0-9-]+$/));
   }
+  /** Linkurile „Vezi toate →” spre paginile de subiect; id-ul are forma articole-subiect-<subiect>-link. */
+  get subjectLinks(): Locator { return this.page.getByTestId(/^articole-subiect-[a-z0-9-]+-link$/); }
+  /** Pe o pagină de subiect (/articole/subiect/<subiect>/): cardurile articolelor din lista subiect-<subiect>-lista. */
+  get subjectArticleLinks(): Locator {
+    return this.page.getByTestId(/^subiect-[a-z0-9-]+-lista$/).getByRole('link').and(this.page.getByTestId(/^articole-card-[a-z0-9-]+$/));
+  }
   get articleBody(): Locator { return this.page.getByTestId('app-main'); }
 
   // Pagina unui articol: id-urile au forma articol-<slug-scurt>-..., deci le potrivim generic.
