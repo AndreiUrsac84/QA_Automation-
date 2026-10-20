@@ -3,12 +3,15 @@ import { ArticolePage } from '../Pages';
 
 const LANGS = ['ro', ...LANGUAGES] as const;
 
+// categoriile de portofoliu cu proiecte sunt indexate și în sitemap, ca paginile din PAGES
+const INDEXED_PAGES = [...PAGES, ...PORTFOLIO_CATEGORIES.filter((c) => c.indexed)];
+
 /**
  * Paginile principale + toate articolele din sitemap, în română și în fiecare limbă tradusă (/<limbă>/<cale>/):
  * verificările SEO on-page rulează pe fiecare. `roPath` = calea în română (ținta hreflang ro / x-default).
  */
 const SEO_PAGES = LANGS.flatMap((lang) =>
-  [...PAGES.map((p) => p.path), ...ARTICLES.map((a) => a.path)].map((roPath) => ({
+  [...INDEXED_PAGES.map((p) => p.path), ...ARTICLES.map((a) => a.path)].map((roPath) => ({
     lang,
     roPath,
     path: lang === 'ro' ? roPath : `/${lang}${roPath}`,
@@ -82,13 +85,13 @@ test.describe('SEO tehnic', () => {
     }
   });
 
-  // Categoriile din portofoliu sunt voit neindexate: trebuie să rămână „noindex, follow”, în afara sitemap-ului,
-  // cu canonical spre ele însele, în toate limbile.
-  test('paginile de categorie din portofoliu sunt noindex, follow și lipsesc din sitemap', async ({ request }) => {
+  // Categoriile din portofoliu fără proiecte sunt voit neindexate: trebuie să rămână „noindex, follow”, în afara
+  // sitemap-ului, cu canonical spre ele însele, în toate limbile. Cele cu proiecte trec prin testele din SEO_PAGES.
+  test('paginile de categorie din portofoliu fără proiecte sunt noindex, follow și lipsesc din sitemap', async ({ request }) => {
     const sitemap = await (await request.get('/sitemap.xml')).text();
     const inSitemap = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1].trim()).pathname));
     for (const lang of LANGS) {
-      for (const c of PORTFOLIO_CATEGORIES) {
+      for (const c of PORTFOLIO_CATEGORIES.filter((c) => !c.indexed)) {
         const path = lang === 'ro' ? c.path : `/${lang}${c.path}`;
         const res = await request.get(path);
         expect.soft(res.status(), `status ${path}`).toBe(200);
@@ -127,11 +130,11 @@ test.describe('SEO tehnic', () => {
     const orphanTranslations = all.filter((p) => splitLanguage(p).lang !== 'ro' && !inSitemap.has(norm(splitLanguage(p).path)));
     expect(orphanTranslations, 'traduceri din sitemap fără pagina în română').toEqual([]);
 
-    const known = new Set(PAGES.map((p) => norm(p.path)));
+    const known = new Set(INDEXED_PAGES.map((p) => norm(p.path)));
     const missing = paths.filter((p) => !isArticle(p) && !known.has(norm(p)));
-    expect(missing, 'pagini din sitemap care lipsesc din PAGES (tests/fixtures/site.ts)').toEqual([]);
-    const notInSitemap = PAGES.filter((p) => !inSitemap.has(norm(p.path))).map((p) => p.path);
-    expect(notInSitemap, 'pagini din PAGES care lipsesc din sitemap').toEqual([]);
+    expect(missing, 'pagini din sitemap care lipsesc din PAGES sau din categoriile indexed (tests/fixtures/site.ts)').toEqual([]);
+    const notInSitemap = INDEXED_PAGES.filter((p) => !inSitemap.has(norm(p.path))).map((p) => p.path);
+    expect(notInSitemap, 'pagini din PAGES sau categorii indexed care lipsesc din sitemap').toEqual([]);
 
     // fiecare pagină testată (toate limbile) e în sitemap, ca SEO_PAGES să acopere exact ce indexează Google
     const sitemapAll = new Set(all.map(norm));

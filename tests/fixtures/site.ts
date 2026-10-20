@@ -15,6 +15,8 @@ export const PAGES = [
   { path: '/articole/', name: 'Articole', titleId: 'articole-title', titleRe: /Ghiduri despre construc.*DAURON TRUST/i },
   { path: '/contact/', name: 'Contact', titleId: 'contact-title', titleRe: /Contact.*DAURON TRUST/i },
   { path: '/gdpr/', name: 'GDPR', titleId: 'gdpr-title', titleRe: /Politica de confiden.*DAURON TRUST/i },
+  // Pagina locală (SEO pe zonă), apărută în 2026-10; după GDPR, ca PAGES[0..5] să rămână aliniat cu NAV_ITEMS
+  { path: '/proiectare-negresti/', name: 'Proiectare Negresti', titleId: 'local-title', titleRe: /Proiectare construc.ii Negre.ti.*DAURON TRUST/i },
   // Specialitățile (/specialitati/<slug>/), apărute în release-ul multilingv din 2026-10
   { path: '/specialitati/arhitectura/', name: 'Specialitate Arhitectura', titleId: 'specialitate-arhitectura-titlu', titleRe: /Arhitectur.*DAURON TRUST/i },
   { path: '/specialitati/edilitare/', name: 'Specialitate Edilitare', titleId: 'specialitate-edilitare-titlu', titleRe: /Proiecte edilitare.*DAURON TRUST/i },
@@ -32,16 +34,18 @@ export const PAGES = [
 ] as const;
 
 /**
- * Paginile de categorie din portofoliu (/portofoliu/<slug>/). Sunt voit `noindex, follow` și lipsesc din sitemap, deci
- * nu intră în PAGES (testul „acoperire” cere PAGES = sitemap): smoke.spec.ts le verifică încărcarea (în toate limbile),
- * seo.spec.ts că rămân noindex și în afara sitemap-ului, content.spec.ts că portofoliul are link spre fiecare.
+ * Paginile de categorie din portofoliu (/portofoliu/<slug>/). Nu intră în PAGES: smoke.spec.ts le verifică încărcarea
+ * (în toate limbile), content.spec.ts că portofoliul are link spre fiecare.
+ * Din 2026-10 o categorie e indexată doar dacă are proiecte: `indexed: true` = în sitemap și fără noindex (seo.spec.ts
+ * o tratează ca pe o pagină din PAGES); `indexed: false` = `noindex, follow` și în afara sitemap-ului.
+ * Când o categorie primește primul proiect, treci-o pe `indexed: true`.
  */
 export const PORTFOLIO_CATEGORIES = [
-  { path: '/portofoliu/locuinte/', name: 'Portofoliu Locuinte', titleId: 'portfolio-locuinte-title', titleRe: /Locuin.e .i reabilit.ri.*DAURON TRUST/i },
-  { path: '/portofoliu/edilitare/', name: 'Portofoliu Edilitare', titleId: 'portfolio-edilitare-title', titleRe: /Proiecte edilitare: re.ele.*DAURON TRUST/i },
-  { path: '/portofoliu/hale/', name: 'Portofoliu Hale', titleId: 'portfolio-hale-title', titleRe: /Hale industriale.*DAURON TRUST/i },
-  { path: '/portofoliu/international/', name: 'Portofoliu International', titleId: 'portfolio-international-title', titleRe: /interna.ionale.*DAURON TRUST/i },
-  { path: '/portofoliu/elemente-arhitecturale/', name: 'Portofoliu Elemente arhitecturale', titleId: 'portfolio-elemente-arhitecturale-title', titleRe: /Sc.ri, ornamente.*DAURON TRUST/i },
+  { path: '/portofoliu/locuinte/', name: 'Portofoliu Locuinte', titleId: 'portfolio-locuinte-title', titleRe: /Locuin.e .i reabilit.ri.*DAURON TRUST/i, indexed: true },
+  { path: '/portofoliu/edilitare/', name: 'Portofoliu Edilitare', titleId: 'portfolio-edilitare-title', titleRe: /Proiecte edilitare: re.ele.*DAURON TRUST/i, indexed: true },
+  { path: '/portofoliu/hale/', name: 'Portofoliu Hale', titleId: 'portfolio-hale-title', titleRe: /Hale industriale.*DAURON TRUST/i, indexed: true },
+  { path: '/portofoliu/international/', name: 'Portofoliu International', titleId: 'portfolio-international-title', titleRe: /interna.ionale.*DAURON TRUST/i, indexed: true },
+  { path: '/portofoliu/elemente-arhitecturale/', name: 'Portofoliu Elemente arhitecturale', titleId: 'portfolio-elemente-arhitecturale-title', titleRe: /Sc.ri, ornamente.*DAURON TRUST/i, indexed: false },
 ] as const;
 
 /**
