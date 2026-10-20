@@ -43,9 +43,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: Number(process.env.WORKERS ?? (process.env.CI ? 2 : 4)),
-  // în CI: fără raport HTML; json-ul alimentează rezumatul eșecurilor (scripts/failures-summary.mjs)
+  // în CI: fără raport HTML și fără câte un rând per test trecut (dot = un punct per test, eșecurile în detaliu);
+  // json-ul alimentează rezumatul eșecurilor (scripts/failures-summary.mjs)
   reporter: process.env.CI
-    ? [['list'], ['github'], ['json', { outputFile: 'test-results/results.json' }]]
+    ? [['dot'], ['github'], ['json', { outputFile: 'test-results/results.json' }]]
     : [
         ['list'],
         ['html', { open: 'never', outputFolder: 'playwright-report' }],
