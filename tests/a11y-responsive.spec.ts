@@ -1,8 +1,11 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, PAGES } from './fixtures/site';
+import { test, expect, PAGES, PORTFOLIO_CATEGORIES } from './fixtures/site';
+
+/** Paginile principale + categoriile din portofoliu (neindexate, dar vizitate din /portofoliu/). */
+const ALL_PAGES = [...PAGES, ...PORTFOLIO_CATEGORIES];
 
 test.describe('Accesibilitate (axe-core, WCAG 2.1 AA)', () => {
-  for (const p of PAGES) {
+  for (const p of ALL_PAGES) {
     test(`fără încălcări critice/serioase pe ${p.path}`, async ({ page }) => {
       await page.goto(p.path);
       const results = await new AxeBuilder({ page })
@@ -21,7 +24,7 @@ test.describe('Accesibilitate (axe-core, WCAG 2.1 AA)', () => {
 });
 
 test.describe('Responsive', () => {
-  for (const p of PAGES) {
+  for (const p of ALL_PAGES) {
     test(`fără scroll orizontal pe ${p.path}`, async ({ page }) => {
       await page.goto(p.path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

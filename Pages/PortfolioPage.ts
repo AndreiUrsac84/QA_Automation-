@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { PortfolioLocators } from './LocatorsPage';
+import { PORTFOLIO_CATEGORIES } from '../tests/fixtures/site';
 
 export class PortfolioPage extends BasePage {
   readonly portfolio: PortfolioLocators;
@@ -15,6 +16,14 @@ export class PortfolioPage extends BasePage {
     await expect(this.portfolio.title).toBeVisible();
     for (const cat of PortfolioLocators.CATEGORIES) {
       await expect.soft(this.portfolio.categoryTitle(cat.id), cat.name).toBeVisible();
+    }
+  }
+
+  /** Fiecare pagină de categorie (PORTFOLIO_CATEGORIES) are cardul ei, cu link spre ea. */
+  async expectCategoryLinks(): Promise<void> {
+    for (const c of PORTFOLIO_CATEGORIES) {
+      const slug = c.path.split('/').filter(Boolean).pop()!;
+      await expect.soft(this.portfolio.categoryCard(slug), `card ${slug}`).toHaveAttribute('href', c.path);
     }
   }
 }

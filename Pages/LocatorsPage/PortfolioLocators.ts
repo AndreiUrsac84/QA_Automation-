@@ -8,6 +8,7 @@ export class PortfolioLocators {
     { name: 'Edilitare', id: 'portfolio-categorie-edilitare-nume' },
     { name: 'Hale', id: 'portfolio-categorie-hale-nume' },
     { name: 'Internațional', id: 'portfolio-categorie-international-nume' },
+    { name: 'Elemente arhitecturale', id: 'portfolio-categorie-elemente-arhitecturale-nume' },
     { name: 'Consultanță', id: 'portfolio-consultanta-title' },
   ] as const;
 
@@ -15,4 +16,6 @@ export class PortfolioLocators {
 
   get title(): Locator { return this.page.getByTestId('portfolio-title'); }
   categoryTitle(id: string): Locator { return this.page.getByTestId(id); }
+  /** Cardul categoriei, link spre /portofoliu/<slug>/. */
+  categoryCard(slug: string): Locator { return this.page.getByTestId(`portfolio-categorie-${slug}`); }
 }

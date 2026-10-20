@@ -10,6 +10,7 @@ import { CommonPages } from '../../Pages/CommonPages';
 export const PAGES = [
   { path: '/', name: 'Home', titleId: 'home-title', titleRe: /DAURON TRUST SRL.*Proiectare Construc/i },
   { path: '/despre-noi/', name: 'About Us', titleId: 'about-title', titleRe: /Despre noi.*DAURON TRUST/i },
+  { path: '/servicii/', name: 'Servicii', titleId: 'servicii-title', titleRe: /Servicii de proiectare.*DAURON TRUST/i },
   { path: '/portofoliu/', name: 'Portofoliu', titleId: 'portfolio-title', titleRe: /Portofoliu.*DAURON TRUST/i },
   { path: '/articole/', name: 'Articole', titleId: 'articole-title', titleRe: /Ghiduri despre construc.*DAURON TRUST/i },
   { path: '/contact/', name: 'Contact', titleId: 'contact-title', titleRe: /Contact.*DAURON TRUST/i },
@@ -28,6 +29,19 @@ export const PAGES = [
   { path: '/articole/subiect/ce-s-a-schimbat-in-lege/', name: 'Subiect Ce s-a schimbat in lege', titleId: 'subiect-ce-s-a-schimbat-in-lege-title', titleRe: /schimbat .n lege.*DAURON TRUST/i },
   { path: '/articole/subiect/reguli-pentru-zona-mea/', name: 'Subiect Reguli pentru zona mea', titleId: 'subiect-reguli-pentru-zona-mea-title', titleRe: /zona mea.*DAURON TRUST/i },
   { path: '/articole/subiect/siguranta-si-rezistenta/', name: 'Subiect Siguranta si rezistenta', titleId: 'subiect-siguranta-si-rezistenta-title', titleRe: /rezisten.*DAURON TRUST/i },
+] as const;
+
+/**
+ * Paginile de categorie din portofoliu (/portofoliu/<slug>/). Sunt voit `noindex, follow` și lipsesc din sitemap, deci
+ * nu intră în PAGES (testul „acoperire” cere PAGES = sitemap): smoke.spec.ts le verifică încărcarea (în toate limbile),
+ * seo.spec.ts că rămân noindex și în afara sitemap-ului, content.spec.ts că portofoliul are link spre fiecare.
+ */
+export const PORTFOLIO_CATEGORIES = [
+  { path: '/portofoliu/locuinte/', name: 'Portofoliu Locuinte', titleId: 'portfolio-locuinte-title', titleRe: /Locuin.e .i reabilit.ri.*DAURON TRUST/i },
+  { path: '/portofoliu/edilitare/', name: 'Portofoliu Edilitare', titleId: 'portfolio-edilitare-title', titleRe: /Proiecte edilitare: re.ele.*DAURON TRUST/i },
+  { path: '/portofoliu/hale/', name: 'Portofoliu Hale', titleId: 'portfolio-hale-title', titleRe: /Hale industriale.*DAURON TRUST/i },
+  { path: '/portofoliu/international/', name: 'Portofoliu International', titleId: 'portfolio-international-title', titleRe: /interna.ionale.*DAURON TRUST/i },
+  { path: '/portofoliu/elemente-arhitecturale/', name: 'Portofoliu Elemente arhitecturale', titleId: 'portfolio-elemente-arhitecturale-title', titleRe: /Sc.ri, ornamente.*DAURON TRUST/i },
 ] as const;
 
 /**
@@ -69,6 +83,7 @@ function loadArticles(): { path: string; slug: string }[] {
 export const NAV_ITEMS = [
   { label: 'Home', href: /\/$/ },
   { label: 'About Us', href: /\/despre-noi\/?$/ },
+  { label: 'Servicii', href: /\/servicii\/?$/ },
   { label: 'Portofoliu', href: /\/portofoliu\/?$/ },
   { label: 'Articole', href: /\/articole\/?$/ },
   { label: 'Contact', href: /\/contact\/?$/ },

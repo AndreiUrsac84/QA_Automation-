@@ -25,12 +25,14 @@ Limba: română, în comentarii, mesaje de assert și rapoarte.
 - `tests/seo.spec.ts` – meta, OG, H1 unic, canonical, lang, hreflang (pe toate `PAGES` și `ARTICLES`, în toate limbile;
   testul „acoperire” verifică și că numărul paginilor testate = numărul URL-urilor din sitemap), robots.txt, sitemap.xml
 - `tests/links.spec.ts` – crawler linkuri rupte (interne + externe)
-- `tests/content.spec.ts` – articole (fiecare deschis și verificat), portofoliu, home. Site-ul are 6 pagini principale,
-  7 specialități (`/specialitati/<slug>/`), 5 subiecte (`/articole/subiect/<slug>/`) – toate 18 în `PAGES` – și ~28 de
-  articole (`/articole/<slug>/`). Articolele NU se listează în `PAGES`: `/articole/` arată doar o parte, restul sunt pe
+- `tests/content.spec.ts` – articole (fiecare deschis și verificat), servicii, portofoliu (+ categoriile), home. Site-ul are
+  7 pagini principale (inclusiv `/servicii/`), 7 specialități (`/specialitati/<slug>/`), 5 subiecte
+  (`/articole/subiect/<slug>/`) – toate 19 în `PAGES` – și ~28 de articole (`/articole/<slug>/`). Articolele NU se listează în `PAGES`: `/articole/` arată doar o parte, restul sunt pe
   paginile de subiect (`ArticolePage.articleUrls()` le adună de pe toate). Din 2026-10 site-ul e multilingv: fiecare
-  pagină are și `/<limbă>/<cale>/` (`LANGUAGES` = en, it, es, de, hu; ~270 URL-uri în sitemap); traducerile nu intră în
+  pagină are și `/<limbă>/<cale>/` (`LANGUAGES` = en, it, es, de, hu; ~280 URL-uri în sitemap); traducerile nu intră în
   `PAGES`: `smoke.spec.ts` și `seo.spec.ts` le generează din `PAGES` + `ARTICLES` × `LANGUAGES`.
+  Categoriile din portofoliu (`/portofoliu/<categorie>/`, 5) sunt voit `noindex, follow` și lipsesc din sitemap, deci stau
+  în `PORTFOLIO_CATEGORIES`, nu în `PAGES`: smoke, a11y/responsive și turul le parcurg, `seo.spec.ts` verifică că rămân noindex.
 - `tests/a11y-responsive.spec.ts` – axe WCAG 2.1 AA, overflow orizontal, ținte touch
 - `tests/visual.spec.ts` – regresie vizuală (rulare separată)
 

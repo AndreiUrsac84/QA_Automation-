@@ -1,4 +1,4 @@
-import { test, expect, PAGES, ARTICLES, LANGUAGES, brokenImages } from './fixtures/site';
+import { test, expect, PAGES, PORTFOLIO_CATEGORIES, ARTICLES, LANGUAGES, brokenImages } from './fixtures/site';
 import { ArticoleLocators, CommonsLocators } from '../Pages/LocatorsPage';
 
 /**
@@ -11,7 +11,8 @@ const label = (lang: string) => (lang === 'ro' ? '' : `[${lang}] `);
 
 for (const lang of LANGS) {
   test.describe(`${label(lang)}Smoke – toate paginile principale @smoke`, () => {
-    for (const p of PAGES) {
+    // + paginile de categorie din portofoliu: nu sunt în sitemap (noindex), dar se ajunge la ele din meniul portofoliului
+    for (const p of [...PAGES, ...PORTFOLIO_CATEGORIES]) {
       const path = prefix(lang) + p.path;
       test(`${label(lang)}${p.name} (${path}) se încarcă fără erori`, async ({ page, consoleErrors }) => {
         const response = await page.goto(path, { waitUntil: 'domcontentloaded' });

@@ -1,6 +1,6 @@
-import { test, expect } from './fixtures/site';
-import { AboutPage, ArticolePage, GdprPage, HomePage, PortfolioPage } from '../Pages';
-import { CommonsLocators } from '../Pages/LocatorsPage';
+import { test, expect, PORTFOLIO_CATEGORIES } from './fixtures/site';
+import { AboutPage, ArticolePage, GdprPage, HomePage, PortfolioPage, ServiciiPage } from '../Pages';
+import { CommonsLocators, ServiciiLocators } from '../Pages/LocatorsPage';
 
 /** Locatorii sunt după id (Pages/LocatorsPage); verificările pe pagini sunt în Page Objects (Pages/). */
 test.describe('Conținut – Articole', () => {
@@ -44,6 +44,57 @@ test.describe('Conținut – Portofoliu', () => {
     const portfolio = new PortfolioPage(page);
     await portfolio.open();
     await portfolio.expectCategories();
+  });
+
+  test('fiecare categorie are card cu link spre pagina ei, iar cardul o deschide', async ({ page }) => {
+    const portfolio = new PortfolioPage(page);
+    await portfolio.open();
+    await portfolio.expectCategoryLinks();
+
+    const [first] = PORTFOLIO_CATEGORIES;
+    await portfolio.portfolio.categoryCard(first.path.split('/').filter(Boolean).pop()!).click();
+    await expect(page).toHaveURL(new RegExp(`${first.path}$`));
+    await expect(page.getByTestId(first.titleId)).toBeVisible();
+  });
+});
+
+test.describe('Conținut – Servicii', () => {
+  test('introducerea, cuprinsul și finalul paginii @smoke', async ({ page }) => {
+    const servicii = new ServiciiPage(page);
+    await servicii.open();
+    await expect(servicii.servicii.title).toBeVisible();
+    await expect(servicii.servicii.intro).toBeVisible();
+    await expect(servicii.servicii.price, 'nota despre preț').toBeVisible();
+    await expect(servicii.servicii.toc).toBeVisible();
+    await expect(servicii.servicii.designGroupTitle).toBeVisible();
+    await expect(servicii.servicii.assistanceGroupTitle).toBeVisible();
+    await expect(servicii.servicii.finalTitle).toBeVisible();
+    await expect(servicii.servicii.finalContactLink).toHaveAttribute('href', /\/contact\/?/);
+  });
+
+  test('fiecare serviciu are secțiunea completă (cuprins, liste, cerere ofertă)', async ({ page }) => {
+    const servicii = new ServiciiPage(page);
+    await servicii.open();
+    await servicii.expectServices();
+  });
+
+  test('linkurile spre specialități, articole și portofoliu duc la pagini existente', async ({ page }) => {
+    const servicii = new ServiciiPage(page);
+    await servicii.open();
+    expect(await servicii.unknownLinks()).toEqual([]);
+  });
+
+  test('cuprinsul sare la serviciu, iar „Cere ofertă” deschide Contact', async ({ page }) => {
+    const servicii = new ServiciiPage(page);
+    await servicii.open();
+    const [slug] = ServiciiLocators.SERVICES;
+    await servicii.servicii.tocLink(slug).click();
+    await expect(page).toHaveURL(new RegExp(`#${slug}$`));
+    await expect(servicii.servicii.serviceTitle(slug)).toBeInViewport();
+
+    await servicii.servicii.offerLink(slug).click();
+    await expect(page).toHaveURL(new RegExp(`/contact/\\?serviciu=${slug}$`));
+    await expect(page.getByTestId('contact-title')).toBeVisible();
   });
 });
 

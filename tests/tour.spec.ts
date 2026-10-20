@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { baseTest as test, PAGES, NAV_ITEMS } from './fixtures/site';
+import { baseTest as test, PAGES, PORTFOLIO_CATEGORIES } from './fixtures/site';
 import { CommonPages } from '../Pages/CommonPages';
 import { ArticolePage } from '../Pages/ArticolePage';
 
@@ -11,12 +11,14 @@ import { ArticolePage } from '../Pages/ArticolePage';
  */
 const SECONDS_PER_PAGE = Number(process.env.TOUR_PAGE_SECONDS ?? 5);
 const SECONDS_PER_ARTICLE = Number(process.env.TOUR_ARTICLE_SECONDS ?? 12);
+/** Paginile principale + categoriile din portofoliu (nu sunt în sitemap, dar se ajunge la ele din /portofoliu/). */
+const TOUR_PAGES = [...PAGES, ...PORTFOLIO_CATEGORIES];
 
 test('tur prin toate paginile și articolele, cu derulare lentă pe fiecare', async ({ page }) => {
-  test.setTimeout(60_000 + PAGES.length * (SECONDS_PER_PAGE * 1000 + 5_000));
+  test.setTimeout(60_000 + TOUR_PAGES.length * (SECONDS_PER_PAGE * 1000 + 5_000));
   const helpers = new CommonPages(page);
 
-  for (const p of PAGES) {
+  for (const p of TOUR_PAGES) {
     await test.step(`${p.name} (${p.path})`, async () => {
       const res = await page.goto(p.path);
       expect(res?.status(), `status HTTP pe ${p.path}`).toBeLessThan(400);
@@ -32,7 +34,7 @@ test('tur prin toate paginile și articolele, cu derulare lentă pe fiecare', as
   const urls = await articole.articleUrls();
   expect(urls.length, 'cel puțin un articol publicat').toBeGreaterThan(0);
   test.setTimeout(
-    60_000 + PAGES.length * (SECONDS_PER_PAGE * 1000 + 5_000) + urls.length * (SECONDS_PER_ARTICLE * 1000 + 5_000),
+    60_000 + TOUR_PAGES.length * (SECONDS_PER_PAGE * 1000 + 5_000) + urls.length * (SECONDS_PER_ARTICLE * 1000 + 5_000),
   );
 
   for (const url of urls) {

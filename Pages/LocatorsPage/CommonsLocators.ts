@@ -4,6 +4,7 @@ import type { Locator, Page } from '@playwright/test';
 const NAV_IDS: Record<string, string> = {
   'Home': 'menu-home-link',
   'About Us': 'menu-about-link',
+  'Servicii': 'menu-servicii-link',
   'Portofoliu': 'menu-portfolio-link',
   'Articole': 'menu-articole-link',
   'Contact': 'menu-contact-link',

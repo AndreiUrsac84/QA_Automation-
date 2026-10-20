@@ -1,4 +1,4 @@
-import { test, expect, PAGES, ARTICLES, LANGUAGES, splitLanguage } from './fixtures/site';
+import { test, expect, PAGES, PORTFOLIO_CATEGORIES, ARTICLES, LANGUAGES, splitLanguage } from './fixtures/site';
 import { ArticolePage } from '../Pages';
 
 const LANGS = ['ro', ...LANGUAGES] as const;
@@ -79,6 +79,27 @@ test.describe('SEO tehnic', () => {
       const res = await request.get(oldPath, { maxRedirects: 0 });
       expect.soft(res.status(), `status ${oldPath}`).toBe(301);
       expect.soft(new URL(res.headers()['location'] ?? '', res.url()).pathname, `Location ${oldPath}`).toBe(newPath);
+    }
+  });
+
+  // Categoriile din portofoliu sunt voit neindexate: trebuie să rămână „noindex, follow”, în afara sitemap-ului,
+  // cu canonical spre ele însele, în toate limbile.
+  test('paginile de categorie din portofoliu sunt noindex, follow și lipsesc din sitemap', async ({ request }) => {
+    const sitemap = await (await request.get('/sitemap.xml')).text();
+    const inSitemap = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1].trim()).pathname));
+    for (const lang of LANGS) {
+      for (const c of PORTFOLIO_CATEGORIES) {
+        const path = lang === 'ro' ? c.path : `/${lang}${c.path}`;
+        const res = await request.get(path);
+        expect.soft(res.status(), `status ${path}`).toBe(200);
+        const html = await res.text();
+        const robots = html.match(/<meta[^>]*name="robots"[^>]*content="([^"]+)"/i)?.[1];
+        expect.soft(robots, `meta robots ${path}`).toMatch(/noindex/i);
+        expect.soft(robots, `meta robots ${path}`).not.toMatch(/nofollow/i);
+        const canonical = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/i)?.[1];
+        expect.soft(canonical && new URL(canonical).pathname, `canonical ${path}`).toBe(path);
+        expect.soft(inSitemap.has(path), `${path} nu trebuie să fie în sitemap`).toBe(false);
+      }
     }
   });
 
