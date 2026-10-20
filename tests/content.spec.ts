@@ -15,11 +15,13 @@ test.describe('Conținut – Articole', () => {
   });
 
   test('fiecare articol se deschide, are titlu (id + H1), conținut și imagini valide', async ({ page, consoleErrors }) => {
-    test.slow();
+    // lista articolelor crește (28 în 2026-10): timeout-ul fix din test.slow() nu mai ajunge, deci scalează cu numărul lor
+    test.setTimeout(90_000);
     const articole = new ArticolePage(page);
     await articole.open();
     const hrefs = await articole.articleUrls();
     expect(hrefs.length, 'cel puțin un articol publicat').toBeGreaterThan(0);
+    test.setTimeout(90_000 + hrefs.length * 12_000);
 
     const problems: string[] = [];
     for (const href of hrefs) problems.push(...(await articole.checkArticle(href)));

@@ -1,5 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
-import { test, expect, PAGES, ARTICLES } from './fixtures/site';
+import { test, expect, PAGES, PORTFOLIO_CATEGORIES, ARTICLES } from './fixtures/site';
 
 /**
  * Search: cum văd motoarele de căutare (Google) paginile principale și articolele – indexabile, în sitemap,
@@ -8,7 +8,8 @@ import { test, expect, PAGES, ARTICLES } from './fixtures/site';
  * Conținutul HTML e același în orice browser, deci testele rulează o singură dată (desktop-chrome).
  */
 const ALL = [
-  ...PAGES.map((p) => ({ path: p.path, articol: false })),
+  // + categoriile de portofoliu cu proiecte: sunt indexate și în sitemap, ca paginile din PAGES (vezi seo.spec.ts)
+  ...[...PAGES, ...PORTFOLIO_CATEGORIES.filter((c) => c.indexed)].map((p) => ({ path: p.path, articol: false })),
   ...ARTICLES.map((a) => ({ path: a.path, articol: true })),
 ];
 const norm = (p: string) => p.replace(/\/?$/, '/');
