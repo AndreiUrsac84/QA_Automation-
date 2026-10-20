@@ -19,7 +19,8 @@ export const PAGES = [
   { path: '/specialitati/edilitare/', name: 'Specialitate Edilitare', titleId: 'specialitate-edilitare-titlu', titleRe: /Proiecte edilitare.*DAURON TRUST/i },
   { path: '/specialitati/elemente-arhitecturale/', name: 'Specialitate Elemente arhitecturale', titleId: 'specialitate-elemente-arhitecturale-titlu', titleRe: /Elemente arhitecturale.*DAURON TRUST/i },
   { path: '/specialitati/geotehnic/', name: 'Specialitate Geotehnic', titleId: 'specialitate-geotehnic-titlu', titleRe: /Studii geotehnice.*DAURON TRUST/i },
-  { path: '/specialitati/instalatii/', name: 'Specialitate Instalatii', titleId: 'specialitate-instalatii-titlu', titleRe: /Instala.*DAURON TRUST/i },
+  { path: '/specialitati/topografie/', name: 'Specialitate Topografie', titleId: 'specialitate-topografie-titlu', titleRe: /Topografie.*DAURON TRUST/i },
+  { path: '/specialitati/instalatii/',name: 'Specialitate Instalatii', titleId: 'specialitate-instalatii-titlu', titleRe: /Instala.*DAURON TRUST/i },
   { path: '/specialitati/verificatori-experti/', name: 'Specialitate Verificatori experti', titleId: 'specialitate-verificatori-experti-titlu', titleRe: /Verificatori.*DAURON TRUST/i },
   // Subiectele din /articole/ (ghidurile grupate pe temă)
   { path: '/articole/subiect/construiesc-o-casa/', name: 'Subiect Construiesc o casa', titleId: 'subiect-construiesc-o-casa-title', titleRe: /construiesc o cas.*DAURON TRUST/i },

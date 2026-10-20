@@ -1,26 +1,65 @@
-import { test, expect, PAGES, ARTICLES, brokenImages } from './fixtures/site';
+import { test, expect, PAGES, ARTICLES, LANGUAGES, brokenImages } from './fixtures/site';
 import { ArticoleLocators, CommonsLocators } from '../Pages/LocatorsPage';
 
-test.describe('Smoke – toate paginile principale @smoke', () => {
-  for (const p of PAGES) {
-    test(`${p.name} (${p.path}) se încarcă fără erori`, async ({ page, consoleErrors }) => {
-      const response = await page.goto(p.path, { waitUntil: 'domcontentloaded' });
+/**
+ * Româna (fără prefix) + fiecare limbă tradusă (/<limbă>/<cale>/). Traducerile au aceleași id-uri ca pagina română,
+ * doar textul diferă: pe ele titlul se verifică generic (conține `DAURON TRUST`), plus atributul lang.
+ */
+const LANGS = ['ro', ...LANGUAGES] as const;
+const prefix = (lang: string) => (lang === 'ro' ? '' : `/${lang}`);
+const label = (lang: string) => (lang === 'ro' ? '' : `[${lang}] `);
 
-      expect(response, 'lipsește răspunsul HTTP').not.toBeNull();
-      expect(response!.status(), `status HTTP pentru ${p.path}`).toBeLessThan(400);
+for (const lang of LANGS) {
+  test.describe(`${label(lang)}Smoke – toate paginile principale @smoke`, () => {
+    for (const p of PAGES) {
+      const path = prefix(lang) + p.path;
+      test(`${label(lang)}${p.name} (${path}) se încarcă fără erori`, async ({ page, consoleErrors }) => {
+        const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
 
-      await expect(page).toHaveTitle(p.titleRe);
-      await expect(page.getByTestId(p.titleId), `titlul paginii (id ${p.titleId})`).toBeVisible();
-      await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
-      await expect(new CommonsLocators(page).logoImage, 'logo în meniu').toBeVisible();
+        expect(response, 'lipsește răspunsul HTTP').not.toBeNull();
+        expect(response!.status(), `status HTTP pentru ${path}`).toBeLessThan(400);
 
-      const broken = await brokenImages(page);
-      expect(broken, 'imagini rupte').toEqual([]);
+        await expect(page.locator('html'), 'atributul lang').toHaveAttribute('lang', lang);
+        // traducerile: „… | DAURON TRUST” sau, pe Home, „DAURON TRUST SRL – …”
+        await expect(page).toHaveTitle(lang === 'ro' ? p.titleRe : /DAURON TRUST/);
+        await expect(page.getByTestId(p.titleId), `titlul paginii (id ${p.titleId})`).toBeVisible();
+        await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+        await expect(new CommonsLocators(page).logoImage, 'logo în meniu').toBeVisible();
 
-      expect(consoleErrors, 'erori JS / consolă').toEqual([]);
-    });
-  }
+        const broken = await brokenImages(page);
+        expect(broken, 'imagini rupte').toEqual([]);
 
+        expect(consoleErrors, 'erori JS / consolă').toEqual([]);
+      });
+    }
+  });
+
+  /** Fiecare articol din sitemap (ARTICLES), cu aceleași verificări ca paginile principale. */
+  test.describe(`${label(lang)}Smoke – articole @smoke`, () => {
+    for (const a of ARTICLES) {
+      const path = prefix(lang) + a.path;
+      test(`${label(lang)}articol ${a.slug} se încarcă fără erori`, async ({ page, consoleErrors }) => {
+        const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
+
+        expect(response, 'lipsește răspunsul HTTP').not.toBeNull();
+        expect(response!.status(), `status HTTP pentru ${path}`).toBeLessThan(400);
+
+        await expect(page.locator('html'), 'atributul lang').toHaveAttribute('lang', lang);
+        await expect(page).toHaveTitle(/\S.*DAURON TRUST/);
+        await expect(new ArticoleLocators(page).articleTitle, 'titlul articolului (id articol-…-title)').toBeVisible();
+        await expect(page.getByRole('heading', { level: 1 }), 'exact un H1').toHaveCount(1);
+        await expect(new CommonsLocators(page).logoImage, 'logo în meniu').toBeVisible();
+
+        const broken = await brokenImages(page);
+        expect(broken, 'imagini rupte').toEqual([]);
+
+        expect(consoleErrors, 'erori JS / consolă').toEqual([]);
+      });
+    }
+  });
+}
+
+test.describe('Smoke – server @smoke', () => {
   test('HTTPS: http:// redirecționează spre https://', async ({ request, baseURL }) => {
     test.skip(!baseURL!.startsWith('https:'), 'mediul țintă nu are HTTPS (ex. BASE_URL_FALLBACK pe Docker local)');
     const httpUrl = baseURL!.replace(/^https:/, 'http:') + '/';
@@ -43,26 +82,4 @@ test.describe('Smoke – toate paginile principale @smoke', () => {
     test.info().annotations.push({ type: 'DCL ms', description: String(Math.round(dcl)) });
     expect(dcl).toBeLessThan(4000);
   });
-});
-
-/** Fiecare articol din sitemap (ARTICLES), cu aceleași verificări ca paginile principale. */
-test.describe('Smoke – articole @smoke', () => {
-  for (const a of ARTICLES) {
-    test(`articol ${a.slug} se încarcă fără erori`, async ({ page, consoleErrors }) => {
-      const response = await page.goto(a.path, { waitUntil: 'domcontentloaded' });
-
-      expect(response, 'lipsește răspunsul HTTP').not.toBeNull();
-      expect(response!.status(), `status HTTP pentru ${a.path}`).toBeLessThan(400);
-
-      await expect(page).toHaveTitle(/\S.*DAURON TRUST/);
-      await expect(new ArticoleLocators(page).articleTitle, 'titlul articolului (id articol-…-title)').toBeVisible();
-      await expect(page.getByRole('heading', { level: 1 }), 'exact un H1').toHaveCount(1);
-      await expect(new CommonsLocators(page).logoImage, 'logo în meniu').toBeVisible();
-
-      const broken = await brokenImages(page);
-      expect(broken, 'imagini rupte').toEqual([]);
-
-      expect(consoleErrors, 'erori JS / consolă').toEqual([]);
-    });
-  }
 });

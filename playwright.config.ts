@@ -43,11 +43,14 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: Number(process.env.WORKERS ?? (process.env.CI ? 2 : 4)),
-  reporter: [
-    ['list'],
-    ['html', { open: 'never', outputFolder: 'playwright-report' }],
-    ['json', { outputFile: 'test-results/results.json' }],
-  ],
+  // în CI: fără raport HTML; json-ul alimentează rezumatul eșecurilor (scripts/failures-summary.mjs)
+  reporter: process.env.CI
+    ? [['list'], ['github'], ['json', { outputFile: 'test-results/results.json' }]]
+    : [
+        ['list'],
+        ['html', { open: 'never', outputFolder: 'playwright-report' }],
+        ['json', { outputFile: 'test-results/results.json' }],
+      ],
   use: {
     baseURL: BASE_URL,
     // site-ul expune id-uri stabile (menu-logo, contact-submit-button...): getByTestId('x') caută după id
@@ -56,9 +59,10 @@ export default defineConfig({
     launchOptions: { slowMo: SLOW_MO },
     locale: 'ro-RO',
     timezoneId: 'Europe/Bucharest',
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // în CI fără trace / poze / video: rezultatul e doar lista testelor picate și cauza
+    trace: process.env.CI ? 'off' : 'retain-on-failure',
+    screenshot: process.env.CI ? 'off' : 'only-on-failure',
+    video: process.env.CI ? 'off' : 'retain-on-failure',
     actionTimeout: 10_000,
     navigationTimeout: 30_000,
     extraHTTPHeaders: { 'X-E2E-Test': 'dauron-trust-e2e' },

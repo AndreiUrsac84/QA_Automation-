@@ -1,8 +1,19 @@
 import { test, expect, PAGES, ARTICLES, LANGUAGES, splitLanguage } from './fixtures/site';
 import { ArticolePage } from '../Pages';
 
-/** Paginile principale + toate articolele din sitemap: verificările SEO on-page rulează pe fiecare. */
-const SEO_PAGES = [...PAGES.map((p) => p.path), ...ARTICLES.map((a) => a.path)].map((path) => ({ path }));
+const LANGS = ['ro', ...LANGUAGES] as const;
+
+/**
+ * Paginile principale + toate articolele din sitemap, în română și în fiecare limbă tradusă (/<limbă>/<cale>/):
+ * verificările SEO on-page rulează pe fiecare. `roPath` = calea în română (ținta hreflang ro / x-default).
+ */
+const SEO_PAGES = LANGS.flatMap((lang) =>
+  [...PAGES.map((p) => p.path), ...ARTICLES.map((a) => a.path)].map((roPath) => ({
+    lang,
+    roPath,
+    path: lang === 'ro' ? roPath : `/${lang}${roPath}`,
+  })),
+);
 
 test.describe('SEO tehnic', () => {
   for (const p of SEO_PAGES) {
@@ -10,17 +21,22 @@ test.describe('SEO tehnic', () => {
       await page.goto(p.path);
 
       const title = await page.title();
-      expect(title.length, 'title între 10 și 70 caractere').toBeGreaterThanOrEqual(10);
-      expect(title.length).toBeLessThanOrEqual(70);
+      expect.soft(title.length, `title între 10 și 70 caractere: „${title}”`).toBeGreaterThanOrEqual(10);
+      expect.soft(title.length, `title între 10 și 70 caractere: „${title}”`).toBeLessThanOrEqual(70);
 
       const desc = await page.locator('meta[name="description"]').getAttribute('content');
       expect(desc, 'meta description lipsă').toBeTruthy();
-      expect(desc!.length, 'meta description 50–170 caractere').toBeGreaterThanOrEqual(50);
-      expect(desc!.length).toBeLessThanOrEqual(170);
+      expect.soft(desc!.length, `meta description 50–170 caractere: „${desc}”`).toBeGreaterThanOrEqual(50);
+      expect.soft(desc!.length, `meta description 50–170 caractere: „${desc}”`).toBeLessThanOrEqual(170);
 
       await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /width=device-width/);
       await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /.+/);
       await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /^https:\/\//);
+
+      // og:url e opțional: getAttribute() pe un meta inexistent ar aștepta tot timeout-ul, deci verificăm întâi dacă există
+      const ogMeta = page.locator('meta[property="og:url"]');
+      const ogUrl = (await ogMeta.count()) > 0 ? await ogMeta.getAttribute('content') : null;
+      if (ogUrl) expect.soft(new URL(ogUrl).pathname, 'og:url corespunde paginii').toBe(new URL(page.url()).pathname);
 
       expect(await page.locator('h1').count(), 'exact un H1 pe pagină').toBe(1);
 
@@ -32,29 +48,29 @@ test.describe('SEO tehnic', () => {
       if ((await robotsMeta.count()) > 0) expect(await robotsMeta.getAttribute('content')).not.toMatch(/noindex/i);
     });
 
-    test(`canonical + lang pe ${p.path}`, async ({ page }) => {
-      await page.goto(p.path);
-      const lang = await page.locator('html').getAttribute('lang');
-      expect.soft(lang, '<html lang> ar trebui să fie "ro"').toMatch(/^ro/i);
+    // lang corect, canonical spre ea însăși și hreflang spre toate versiunile (+ x-default spre română),
+    // ca Google să nu trateze traducerile drept conținut duplicat
+    test(`canonical, lang și hreflang pe ${p.path}`, async ({ request }) => {
+      const res = await request.get(p.path);
+      expect(res.status(), `status ${p.path}`).toBe(200);
+      const html = await res.text();
 
-      const canonical = await page.locator('link[rel="canonical"]').getAttribute('href').catch(() => null);
+      const htmlLang = html.match(/<html[^>]*\slang="([^"]+)"/i)?.[1];
+      expect.soft(htmlLang, '<html lang>').toBe(p.lang);
+
+      const canonical = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/i)?.[1];
       expect.soft(canonical, 'lipsește <link rel="canonical">').toBeTruthy();
-      if (canonical) expect.soft(new URL(canonical).pathname).toBe(new URL(page.url()).pathname);
+      if (canonical) expect.soft(new URL(canonical).pathname, 'canonical spre pagina însăși').toBe(p.path);
+
+      const alternates = new Map(
+        [...html.matchAll(/<link[^>]*rel="alternate"[^>]*hreflang="([^"]+)"[^>]*href="([^"]+)"/gi)].map((m) => [m[1].toLowerCase(), new URL(m[2]).pathname]),
+      );
+      for (const l of [...LANGS, 'x-default']) {
+        const expected = l === 'ro' || l === 'x-default' ? p.roPath : `/${l}${p.roPath}`;
+        expect.soft(alternates.get(l), `hreflang ${l}`).toBe(expected);
+      }
     });
   }
-
-  test('og:url corespunde paginii curente', async ({ page }) => {
-    test.slow();
-    for (const p of SEO_PAGES) {
-      await page.goto(p.path);
-      // og:url e opțional: getAttribute() pe un meta inexistent ar aștepta tot timeout-ul, deci verificăm întâi dacă există
-      const ogMeta = page.locator('meta[property="og:url"]');
-      if ((await ogMeta.count()) === 0) continue;
-      const ogUrl = await ogMeta.getAttribute('content');
-      if (!ogUrl) continue;
-      expect.soft(new URL(ogUrl).pathname, `og:url pe ${p.path}`).toBe(new URL(page.url()).pathname);
-    }
-  });
 
   // În release-ul din 2026-10 /about/ și /portfolio/ au devenit /despre-noi/ și /portofoliu/; adresele vechi trebuie
   // să rămână redirecționate 301, ca linkurile externe și indexarea Google să nu se piardă.
@@ -96,6 +112,12 @@ test.describe('SEO tehnic', () => {
     const notInSitemap = PAGES.filter((p) => !inSitemap.has(norm(p.path))).map((p) => p.path);
     expect(notInSitemap, 'pagini din PAGES care lipsesc din sitemap').toEqual([]);
 
+    // fiecare pagină testată (toate limbile) e în sitemap, ca SEO_PAGES să acopere exact ce indexează Google
+    const sitemapAll = new Set(all.map(norm));
+    const testedNotInSitemap = SEO_PAGES.filter((p) => !sitemapAll.has(norm(p.path))).map((p) => p.path);
+    expect(testedNotInSitemap, 'pagini testate (inclusiv traduceri) care lipsesc din sitemap').toEqual([]);
+    expect(SEO_PAGES.length, 'toate URL-urile din sitemap sunt testate').toBe(sitemapAll.size);
+
     const articole = new ArticolePage(page);
     await articole.open();
     const listed = new Set((await articole.articleUrls()).map((u) => norm(new URL(u).pathname)));
@@ -115,36 +137,5 @@ test.describe('SEO tehnic', () => {
       if (r.status() !== 200) failed.push(`${r.status()} ${u}`);
     }
     expect(failed, 'URL-uri din sitemap care nu dau 200 direct').toEqual([]);
-  });
-
-  // Fiecare pagină principală există în toate limbile: lang corect, canonical spre ea însăși și hreflang spre toate
-  // versiunile (+ x-default spre română), ca Google să nu le trateze drept conținut duplicat.
-  test('versiunile traduse ale paginilor au lang, canonical și hreflang corecte', async ({ request }) => {
-    test.slow();
-    const langs = ['ro', ...LANGUAGES];
-    const problems: string[] = [];
-    for (const p of PAGES) {
-      for (const lang of langs) {
-        const path = lang === 'ro' ? p.path : `/${lang}${p.path}`;
-        const res = await request.get(path);
-        if (res.status() !== 200) {
-          problems.push(`${path}: status ${res.status()}`);
-          continue;
-        }
-        const html = await res.text();
-        const htmlLang = html.match(/<html[^>]*\slang="([^"]+)"/i)?.[1];
-        if (htmlLang !== lang) problems.push(`${path}: <html lang="${htmlLang}">, așteptat "${lang}"`);
-        const canonical = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/i)?.[1];
-        if (!canonical || new URL(canonical).pathname !== path) problems.push(`${path}: canonical ${canonical ?? 'lipsă'}`);
-        const alternates = new Map(
-          [...html.matchAll(/<link[^>]*rel="alternate"[^>]*hreflang="([^"]+)"[^>]*href="([^"]+)"/gi)].map((m) => [m[1].toLowerCase(), new URL(m[2]).pathname]),
-        );
-        for (const l of [...langs, 'x-default']) {
-          const expected = l === 'ro' || l === 'x-default' ? p.path : `/${l}${p.path}`;
-          if (alternates.get(l) !== expected) problems.push(`${path}: hreflang ${l} = ${alternates.get(l) ?? 'lipsă'}, așteptat ${expected}`);
-        }
-      }
-    }
-    expect(problems, 'probleme pe versiunile traduse').toEqual([]);
   });
 });

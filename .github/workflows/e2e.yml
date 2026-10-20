@@ -1,8 +1,7 @@
 name: E2E dauron-trust.com
 
-# Setul CI (npm run test:ci) = Smoke + SEO + Search pe cele 6 pagini principale și pe toate articolele din sitemap.
-# Rulează la fiecare push / pull request. Programat (de 3 ori pe zi) rulează suita completă, fără linkurile externe;
-# linkurile externe (@extern) au job separat, care doar raportează (depind de terți, nu blochează).
+# Rulează Smoke (@smoke), SEO (seo.spec.ts) și Turul lent (tour), câte un job în paralel, pe toate limbile site-ului.
+# La push / pull request și programat (de 3 ori pe zi) rulează toate trei; manual se poate alege și doar unul.
 on:
   schedule:
     - cron: '17 4,10,16 * * *'   # de 3 ori pe zi: 07:17, 13:17, 19:17 ora României (vară)
@@ -15,8 +14,8 @@ on:
       suite:
         description: 'Setul de teste'
         type: choice
-        options: [ci, smoke, full, extern, visual, tour]
-        default: ci
+        options: [toate, smoke, seo, tour]
+        default: toate
       base_url:
         description: 'Mediul țintă (gol = producția)'
         required: false
@@ -34,9 +33,14 @@ env:
 
 jobs:
   e2e:
-    if: github.event.inputs.suite != 'extern'
+    name: ${{ matrix.suite }}
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    # turul derulează lent fiecare pagină, pe 3 motoare la rând (~35 min)
+    timeout-minutes: ${{ matrix.suite == 'tour' && 60 || 30 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJSON((github.event.inputs.suite && github.event.inputs.suite != 'toate') && format('["{0}"]', github.event.inputs.suite) || '["smoke","seo","tour"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,54 +50,29 @@ jobs:
       - run: npm ci
       - name: Browsere Playwright
         run: |
-          case "${{ github.event.inputs.suite }}" in
-            visual) npx playwright install --with-deps chromium ;;
+          case "${{ matrix.suite }}" in
+            seo) npx playwright install --with-deps chromium ;;
             *) npx playwright install --with-deps chromium firefox webkit ;;
           esac
       - run: npm run typecheck
-      - name: Teste (${{ github.event.inputs.suite || (github.event_name == 'schedule' && 'full') || 'ci' }})
+      - name: Teste (${{ matrix.suite }})
         run: |
-          SUITE="${{ github.event.inputs.suite }}"
-          [ -z "$SUITE" ] && { [ "${{ github.event_name }}" = "schedule" ] && SUITE=full || SUITE=ci; }
-          case "$SUITE" in
-            ci) npm run test:ci ;;
+          case "${{ matrix.suite }}" in
             smoke) npm run test:smoke ;;
-            full) npm test -- --grep-invert @extern ;;
-            visual) npm run test:visual ;;
+            seo) npm run test:seo ;;
             tour) npm run test:tour:once ;;
           esac
-      - uses: actions/upload-artifact@v4
+      # Fără raport HTML / poze / video: la final doar testele picate și cauza (în log și în rezumatul job-ului)
+      - name: Teste picate și cauza
         if: always()
-        with:
-          name: playwright-report
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 14
-
-  # Linkuri externe: depind de site-uri terțe (anti-bot, rate limit), deci doar raportează, nu pică workflow-ul.
-  extern:
-    if: github.event_name == 'schedule' || github.event.inputs.suite == 'extern'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:extern
+        run: node scripts/failures-summary.mjs
+      # results.json (text, fără poze/video) doar pentru triage-ul cu Claude
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: failure() && vars.CLAUDE_TRIAGE == 'true'
         with:
-          name: playwright-report-extern
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 14
+          name: playwright-results-${{ matrix.suite }}
+          path: test-results/results.json
+          retention-days: 7
 
   # Analiză automată a eșecurilor cu Claude (necesită secretul ANTHROPIC_API_KEY)
   claude-triage:
@@ -106,13 +85,15 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      # fiecare set picat ajunge în test-results/playwright-results-<set>/results.json
       - uses: actions/download-artifact@v4
         with:
-          name: playwright-report
+          pattern: playwright-results-*
+          path: test-results
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             Suita E2E pentru dauron-trust.com a picat. Folosește subagentul qa-tester.
-            Citește test-results/results.json, clasifică fiecare eșec (bug site / test fragil / schimbare voită / instabil).
+            Citește test-results/playwright-results-*/results.json, clasifică fiecare eșec (bug site / test fragil / schimbare voită / instabil).
             Pentru bugurile de site deschide un issue cu raportul. Pentru testele fragile deschide un PR cu reparația.

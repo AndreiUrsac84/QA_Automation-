@@ -6,6 +6,7 @@
   "scripts": {
     "test": "playwright test --project=desktop-chrome --project=mobile-chrome --project=desktop-firefox --project=mobile-safari",
     "test:smoke": "playwright test --grep @smoke",
+    "test:seo": "playwright test tests/seo.spec.ts --project=desktop-chrome --project=mobile-chrome",
     "test:ci": "playwright test tests/smoke.spec.ts tests/seo.spec.ts tests/search.spec.ts --project=desktop-chrome --project=mobile-chrome --project=desktop-firefox --project=mobile-safari",
     "test:extern": "playwright test --project=desktop-chrome --grep @extern",
     "test:desktop": "playwright test --project=desktop-chrome",
