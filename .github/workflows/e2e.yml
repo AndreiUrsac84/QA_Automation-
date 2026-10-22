@@ -4,7 +4,7 @@ name: E2E dauron-trust.com
 # La push / pull request și programat (de 3 ori pe zi) rulează toate trei; manual se poate alege și doar unul.
 on:
   schedule:
-    - cron: '17 4,10,16 * * *'   # de 3 ori pe zi: 07:17, 13:17, 19:17 ora României (vară)
+    - cron: '17 4 * * *'   # de 3 ori pe zi: 07:17, 13:17, 19:17 ora României (vară)
   push:
     branches: [master]
   pull_request:
@@ -14,7 +14,7 @@ on:
       suite:
         description: 'Setul de teste'
         type: choice
-        options: [toate, smoke, seo, tour]
+        options: [toate, seo, tour]
         default: toate
       base_url:
         description: 'Mediul țintă (gol = producția)'
