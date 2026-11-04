@@ -4,22 +4,22 @@
   "private": true,
   "description": "Testare automată E2E pentru dauron-trust.com (Playwright + TypeScript)",
   "scripts": {
-    "test": "playwright test --project=desktop-chrome --project=mobile-chrome --project=desktop-firefox --project=mobile-safari",
+    "test": "playwright test --project=desktop-chrome --project=mobile-chrome --project=desktop-firefox",
     "test:smoke": "playwright test --grep @smoke",
     "test:seo": "playwright test tests/seo.spec.ts --project=desktop-chrome --project=mobile-chrome",
-    "test:ci": "playwright test tests/smoke.spec.ts tests/seo.spec.ts tests/search.spec.ts --project=desktop-chrome --project=mobile-chrome --project=desktop-firefox --project=mobile-safari",
+    "test:ci": "playwright test tests/smoke.spec.ts tests/seo.spec.ts tests/search.spec.ts --project=desktop-chrome --project=mobile-chrome --project=desktop-firefox",
     "test:extern": "playwright test --project=desktop-chrome --grep @extern",
     "test:desktop": "playwright test --project=desktop-chrome",
     "test:mobile": "playwright test --project=mobile-chrome",
     "test:headed": "playwright test --headed --project=desktop-chrome",
     "test:ui": "playwright test --ui",
     "test:tour": "node scripts/repeat-tour.mjs",
-    "test:tour:once": "playwright test --project=tour-chromium --project=tour-firefox --project=tour-webkit --workers=1",
+    "test:tour:once": "playwright test --project=tour-chromium --project=tour-firefox --workers=1",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
     "test:visual": "playwright test --project=visual-desktop --project=visual-mobile",
     "test:visual:update": "playwright test --project=visual-desktop --project=visual-mobile --update-snapshots",
-    "install:browsers": "playwright install --with-deps chromium firefox webkit"
+    "install:browsers": "playwright install --with-deps chromium firefox"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

@@ -6,7 +6,7 @@ Testare automată E2E pentru [dauron-trust.com](https://dauron-trust.com) (site 
 
 ```
 npm ci
-npx playwright install chromium firefox webkit
+npx playwright install chromium firefox
 ```
 
 ## Rulare

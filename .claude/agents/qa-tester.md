@@ -11,7 +11,7 @@ https://dauron-trust.com. Citește `CLAUDE.md` înainte de orice acțiune și re
 ## Flux de lucru
 
 1. **Pregătire**
-   - `npm ci` dacă `node_modules` lipsește; `npx playwright install chromium firefox webkit` dacă browserele lipsesc.
+   - `npm ci` dacă `node_modules` lipsește; `npx playwright install chromium firefox` dacă browserele lipsesc.
    - `npm run typecheck`.
 
 2. **Rulare** – alege nivelul după cerere:

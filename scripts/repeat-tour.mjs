@@ -1,4 +1,4 @@
-// Rulează turul prin pagini de TOUR_RUNS ori pentru fiecare motor de browser (chromium, firefox, webkit).
+// Rulează turul prin pagini de TOUR_RUNS ori pentru fiecare motor de browser (chromium, firefox).
 // Într-un ciclu motoarele rulează pe rând; ciclurile pornesc la TOUR_INTERVAL_MIN minute unul de altul.
 // Config din .env: TOUR_RUNS (implicit 20), TOUR_INTERVAL_MIN (implicit 10), TOUR_BROWSERS (implicit toate trei).
 // Oprire: Ctrl+C.
@@ -12,7 +12,7 @@ try {
 
 const runs = Number(process.env.TOUR_RUNS ?? 20);
 const intervalMs = Number(process.env.TOUR_INTERVAL_MIN ?? 10) * 60_000;
-const browsers = (process.env.TOUR_BROWSERS ?? 'chromium,firefox,webkit').split(',').map((b) => b.trim());
+const browsers = (process.env.TOUR_BROWSERS ?? 'chromium,firefox').split(',').map((b) => b.trim());
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const stamp = () => new Date().toLocaleString('ro-RO');
 

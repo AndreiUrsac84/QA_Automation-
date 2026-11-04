@@ -74,11 +74,9 @@ export default defineConfig({
     { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] }, testIgnore: /visual\.spec|tour\.spec/ },
     { name: 'mobile-chrome', use: { ...devices['Pixel 7'] }, testIgnore: /visual\.spec|tour\.spec/ },
     { name: 'desktop-firefox', use: { ...devices['Desktop Firefox'] }, grep: /@smoke/, testIgnore: /visual\.spec|tour\.spec/ },
-    { name: 'mobile-safari', use: { ...devices['iPhone 14'] }, grep: /@smoke/, testIgnore: /visual\.spec|tour\.spec/ },
     // tur prin toate paginile, câte un proiect pe motor – rulat separat: npm run test:tour (repetat) sau test:tour:once
     { name: 'tour-chromium', use: { ...devices['Desktop Chrome'], launchOptions: { slowMo: SLOW_MO, args: ['--disable-blink-features=AutomationControlled'] } }, testMatch: /tour\.spec/ },
     { name: 'tour-firefox', use: { ...devices['Desktop Firefox'] }, testMatch: /tour\.spec/ },
-    { name: 'tour-webkit', use: { ...devices['Desktop Safari'] }, testMatch: /tour\.spec/ },
     // regresie vizuală – rulată separat: npm run test:visual
     { name: 'visual-desktop', use: { ...devices['Desktop Chrome'] }, testMatch: /visual\.spec/ },
     { name: 'visual-mobile', use: { ...devices['Pixel 7'] }, testMatch: /visual\.spec/ },

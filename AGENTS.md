@@ -30,7 +30,7 @@ Când să folosești ce:
 
 ```bash
 npm ci
-npx playwright install chromium firefox webkit   # doar dacă lipsesc browserele
+npx playwright install chromium firefox   # doar dacă lipsesc browserele
 npm run typecheck
 npm run test:smoke                               # ~1 min
 ```
@@ -86,7 +86,7 @@ Convenții:
 - Locatori: `getByRole` > `getByLabel` > `getByText`. Fără selectori CSS fragili, fără `nth-child`.
 - Fără `waitForTimeout` (excepție: cele existente la validarea formularului). Folosește auto-wait și `expect(...).toBe...`.
 - Mesaje de assert în română și descriptive.
-- Taguri: `@smoke` doar pentru teste rapide și esențiale (rulează și pe Firefox și Safari mobil).
+- Taguri: `@smoke` doar pentru teste rapide și esențiale (rulează și pe Firefox).
 - `test.skip`/`fixme` doar cu motiv scris în cod.
 
 După **orice** modificare de cod: `npm run typecheck`, apoi rulează testele atinse.
@@ -140,7 +140,7 @@ Raportează fidel: dacă ceva a picat sau nu a fost rulat, spune-o explicit, cu 
 
 | Simptom | Cauză probabilă | Ce faci |
 |---|---|---|
-| Browser lipsă | Playwright neinstalat | `npx playwright install chromium firefox webkit` |
+| Browser lipsă | Playwright neinstalat | `npx playwright install chromium firefox` |
 | Timeout general | Site lent sau rețea | Re-rulează cu `--retries=0` izolat; clasifică INSTABIL dacă e sporadic |
 | Eșec doar pe linkuri externe | Terț indisponibil / blochează boți | INSTABIL; notează în raport |
 | Diferențe vizuale | Schimbare de design sau randare diferită pe OS | Întreabă utilizatorul; nu actualiza singur |

@@ -8,7 +8,7 @@ Limba: română, în comentarii, mesaje de assert și rapoarte.
 ## Structură
 
 - `playwright.config.ts` – baseURL (`BASE_URL` env, implicit producție), proiecte: desktop-chrome, mobile-chrome,
-  desktop-firefox (@smoke), mobile-safari (@smoke), tour-chromium/firefox/webkit, visual-desktop, visual-mobile.
+  desktop-firefox (@smoke), tour-chromium/firefox, visual-desktop, visual-mobile.
   Reîncercări: 1 local, 2 în CI. Variabilele de mediu sunt documentate în `.env.example` (`.env` e încărcat automat).
 - `tests/fixtures/site.ts` – lista de pagini (`PAGES`), meniu (`NAV_ITEMS`), date contact, fixture `consoleErrors`,
   helper `brokenImages`. **Orice pagină nouă de pe site se adaugă întâi aici** (cu `titleId`, id-ul titlului);

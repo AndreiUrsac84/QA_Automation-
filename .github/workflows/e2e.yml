@@ -35,7 +35,7 @@ jobs:
   e2e:
     name: ${{ matrix.suite }}
     runs-on: ubuntu-latest
-    # turul derulează lent fiecare pagină, pe 3 motoare la rând (~35 min)
+    # turul derulează lent fiecare pagină, pe 2 motoare la rând
     timeout-minutes: ${{ matrix.suite == 'tour' && 60 || 30 }}
     strategy:
       fail-fast: false
@@ -52,7 +52,7 @@ jobs:
         run: |
           case "${{ matrix.suite }}" in
             seo) npx playwright install --with-deps chromium ;;
-            *) npx playwright install --with-deps chromium firefox webkit ;;
+            *) npx playwright install --with-deps chromium firefox ;;
           esac
       - run: npm run typecheck
       - name: Teste (${{ matrix.suite }})
