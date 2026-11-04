@@ -25,9 +25,10 @@ Limba: română, în comentarii, mesaje de assert și rapoarte.
 - `tests/seo.spec.ts` – meta, OG, H1 unic, canonical, lang, hreflang (pe toate `PAGES` și `ARTICLES`, în toate limbile;
   testul „acoperire” verifică și că numărul paginilor testate = numărul URL-urilor din sitemap), robots.txt, sitemap.xml
 - `tests/links.spec.ts` – crawler linkuri rupte (interne + externe)
-- `tests/content.spec.ts` – articole (fiecare deschis și verificat), servicii, portofoliu (+ categoriile), home. Site-ul are
-  7 pagini principale (inclusiv `/servicii/`), pagina locală `/proiectare-negresti/`, 7 specialități
-  (`/specialitati/<slug>/`), 5 subiecte (`/articole/subiect/<slug>/`) – toate 20 în `PAGES` – și ~28 de articole (`/articole/<slug>/`). Articolele NU se listează în `PAGES`: `/articole/` arată doar o parte, restul sunt pe
+- `tests/content.spec.ts` – articole (fiecare deschis și verificat), servicii (lista cu carduri + câte o pagină per serviciu), portofoliu (+ categoriile), home. Site-ul are
+  7 pagini principale (inclusiv `/servicii/`), pagina locală `/proiectare-negresti/`, 11 pagini de serviciu
+  (`/servicii/<slug>/`, slugurile în `ServiciiLocators.SERVICES`), 7 specialități
+  (`/specialitati/<slug>/`), 5 subiecte (`/articole/subiect/<slug>/`) – toate 31 în `PAGES` – și ~28 de articole (`/articole/<slug>/`). Articolele NU se listează în `PAGES`: `/articole/` arată doar o parte, restul sunt pe
   paginile de subiect (`ArticolePage.articleUrls()` le adună de pe toate). Din 2026-10 site-ul e multilingv: fiecare
   pagină are și `/<limbă>/<cale>/` (`LANGUAGES` = en, it, es, de, hu; ~310 URL-uri în sitemap); traducerile nu intră în
   `PAGES`: `smoke.spec.ts` și `seo.spec.ts` le generează din `PAGES` + `ARTICLES` × `LANGUAGES`.

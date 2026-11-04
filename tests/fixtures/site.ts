@@ -17,6 +17,18 @@ export const PAGES = [
   { path: '/gdpr/', name: 'GDPR', titleId: 'gdpr-title', titleRe: /Politica de confiden.*DAURON TRUST/i },
   // Pagina locală (SEO pe zonă), apărută în 2026-10; după GDPR, ca PAGES[0..5] să rămână aliniat cu NAV_ITEMS
   { path: '/proiectare-negresti/', name: 'Proiectare Negresti', titleId: 'local-title', titleRe: /Proiectare construc.ii Negre.ti.*DAURON TRUST/i },
+  // Paginile serviciilor (/servicii/<slug>/), câte una per card din /servicii/
+  { path: '/servicii/case-vile/', name: 'Serviciu Case și vile', titleId: 'servicii-case-vile-titlu', titleRe: /Case .i vile.*DAURON TRUST/i },
+  { path: '/servicii/intrare-in-legalitate/', name: 'Serviciu Intrare în legalitate', titleId: 'servicii-intrare-in-legalitate-titlu', titleRe: /Intrare .n legalitate.*DAURON TRUST/i },
+  { path: '/servicii/extinderi-mansardari/', name: 'Serviciu Extinderi mansardari', titleId: 'servicii-extinderi-mansardari-titlu', titleRe: /Extinderi, mans.*DAURON TRUST/i },
+  { path: '/servicii/consolidari-reabilitari/', name: 'Serviciu Consolidari reabilitari', titleId: 'servicii-consolidari-reabilitari-titlu', titleRe: /Consolid.ri .i reabilit.*DAURON TRUST/i },
+  { path: '/servicii/hale-industriale/', name: 'Serviciu Hale industriale', titleId: 'servicii-hale-industriale-titlu', titleRe: /Hale .i construc.ii industriale.*DAURON TRUST/i },
+  { path: '/servicii/cladiri-publice-comerciale/', name: 'Serviciu Cladiri publice comerciale', titleId: 'servicii-cladiri-publice-comerciale-titlu', titleRe: /Cl.diri publice .i comerciale.*DAURON TRUST/i },
+  { path: '/servicii/edilitare/', name: 'Serviciu Edilitare', titleId: 'servicii-edilitare-titlu', titleRe: /Proiecte edilitare.*DAURON TRUST/i },
+  { path: '/servicii/anexe-garaje-garduri/', name: 'Serviciu Anexe garaje garduri', titleId: 'servicii-anexe-garaje-garduri-titlu', titleRe: /Anexe, garaje .i garduri.*DAURON TRUST/i },
+  { path: '/servicii/obtinere-acte/', name: 'Serviciu Obtinere acte', titleId: 'servicii-obtinere-acte-titlu', titleRe: /Ob.inerea actelor.*DAURON TRUST/i },
+  { path: '/servicii/asistenta-santier/', name: 'Serviciu Asistenta santier', titleId: 'servicii-asistenta-santier-titlu', titleRe: /Asisten.. tehnic. pe .antier.*DAURON TRUST/i },
+  { path: '/servicii/colaborare-firme/', name: 'Serviciu Colaborare firme', titleId: 'servicii-colaborare-firme-titlu', titleRe: /Colaborare pentru firme.*DAURON TRUST/i },
   // Specialitățile (/specialitati/<slug>/), apărute în release-ul multilingv din 2026-10
   { path: '/specialitati/arhitectura/', name: 'Specialitate Arhitectura', titleId: 'specialitate-arhitectura-titlu', titleRe: /Arhitectur.*DAURON TRUST/i },
   { path: '/specialitati/edilitare/', name: 'Specialitate Edilitare', titleId: 'specialitate-edilitare-titlu', titleRe: /Proiecte edilitare.*DAURON TRUST/i },

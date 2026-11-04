@@ -1,5 +1,5 @@
 import { test, expect, PORTFOLIO_CATEGORIES } from './fixtures/site';
-import { AboutPage, ArticolePage, GdprPage, HomePage, PortfolioPage, ServiciiPage } from '../Pages';
+import { AboutPage, ArticolePage, GdprPage, HomePage, PortfolioPage, ServiciiPage, ServiciuPage } from '../Pages';
 import { CommonsLocators, ServiciiLocators } from '../Pages/LocatorsPage';
 
 /** Locatorii sunt după id (Pages/LocatorsPage); verificările pe pagini sunt în Page Objects (Pages/). */
@@ -61,43 +61,51 @@ test.describe('Conținut – Portofoliu', () => {
 });
 
 test.describe('Conținut – Servicii', () => {
-  test('introducerea, cuprinsul și finalul paginii @smoke', async ({ page }) => {
+  test('introducerea, grupele și finalul paginii @smoke', async ({ page }) => {
     const servicii = new ServiciiPage(page);
     await servicii.open();
     await expect(servicii.servicii.title).toBeVisible();
     await expect(servicii.servicii.intro).toBeVisible();
     await expect(servicii.servicii.price, 'nota despre preț').toBeVisible();
-    await expect(servicii.servicii.toc).toBeVisible();
     await expect(servicii.servicii.designGroupTitle).toBeVisible();
     await expect(servicii.servicii.assistanceGroupTitle).toBeVisible();
     await expect(servicii.servicii.finalTitle).toBeVisible();
     await expect(servicii.servicii.finalContactLink).toHaveAttribute('href', /\/contact\/?/);
   });
 
-  test('fiecare serviciu are secțiunea completă (cuprins, liste, cerere ofertă)', async ({ page }) => {
+  test('fiecare serviciu are card cu link spre pagina lui', async ({ page }) => {
     const servicii = new ServiciiPage(page);
     await servicii.open();
-    await servicii.expectServices();
+    await servicii.expectCards();
   });
 
-  test('linkurile spre specialități, articole și portofoliu duc la pagini existente', async ({ page }) => {
-    const servicii = new ServiciiPage(page);
-    await servicii.open();
-    expect(await servicii.unknownLinks()).toEqual([]);
-  });
-
-  test('cuprinsul sare la serviciu, iar „Cere ofertă” deschide Contact', async ({ page }) => {
+  test('cardul deschide pagina serviciului, iar „Cere ofertă” deschide Contact', async ({ page }) => {
     const servicii = new ServiciiPage(page);
     await servicii.open();
     const [slug] = ServiciiLocators.SERVICES;
-    await servicii.servicii.tocLink(slug).click();
-    await expect(page).toHaveURL(new RegExp(`#${slug}$`));
-    await expect(servicii.servicii.serviceTitle(slug)).toBeInViewport();
+    await servicii.servicii.card(slug).click();
+    await expect(page).toHaveURL(new RegExp(`/servicii/${slug}/$`));
+    await expect(servicii.servicii.serviceTitle(slug)).toBeVisible();
 
+    await servicii.servicii.backLink(slug).click();
+    await expect(page).toHaveURL(/\/servicii\/$/);
+    await expect(servicii.servicii.title).toBeVisible();
+
+    await page.goBack();
     await servicii.servicii.offerLink(slug).click();
     await expect(page).toHaveURL(new RegExp(`/contact/\\?serviciu=${slug}$`));
     await expect(page.getByTestId('contact-title')).toBeVisible();
   });
+
+  // câte un test per serviciu, ca raportul să arate exact ce pagină are probleme
+  for (const slug of ServiciiLocators.SERVICES) {
+    test(`pagina serviciului ${slug}: conținut complet, linkuri spre pagini existente`, async ({ page }) => {
+      const serviciu = new ServiciuPage(page, slug);
+      await serviciu.open();
+      await serviciu.expectComplete();
+      expect(await serviciu.unknownLinks()).toEqual([]);
+    });
+  }
 });
 
 test.describe('Conținut – Home', () => {
