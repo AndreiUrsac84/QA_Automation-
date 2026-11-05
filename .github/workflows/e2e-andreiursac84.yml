@@ -1,0 +1,102 @@
+name: E2E dauron-trust.com (AndreiUrsac84)
+
+# Rulează Smoke (@smoke), SEO (seo.spec.ts) și Turul lent (tour), câte un job în paralel, pe toate limbile site-ului.
+# La push / pull request și programat (de 2 ori pe zi) rulează toate trei; manual se poate alege și doar unul.
+on:
+  schedule:
+    # 10:47 și 22:47 ora României (vară) = 07:47 și 19:47 UTC
+    - cron: '47 7 * * *'
+    - cron: '47 19 * * *'
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Setul de teste'
+        type: choice
+        options: [toate, seo, tour]
+        default: toate
+      base_url:
+        description: 'Mediul țintă (gol = producția)'
+        required: false
+        default: ''
+
+concurrency:
+  group: e2e-AndreiUrsac84-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: 'true'
+  BASE_URL: ${{ github.event.inputs.base_url || 'https://dauron-trust.com' }}
+  PAGE_PAUSE_MS: '0'   # fără pauza de 1s după fiecare goto (utilă doar când urmărești testul)
+  WORKERS: '4'         # runner-ele ubuntu-latest au 4 vCPU
+
+jobs:
+  e2e:
+    name: ${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'AndreiUrsac84'
+    # turul derulează lent fiecare pagină, pe 2 motoare la rând
+    timeout-minutes: ${{ matrix.suite == 'tour' && 60 || 30 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJSON((github.event.inputs.suite && github.event.inputs.suite != 'toate') && format('["{0}"]', github.event.inputs.suite) || '["smoke","seo","tour"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Browsere Playwright
+        run: |
+          case "${{ matrix.suite }}" in
+            seo) npx playwright install --with-deps chromium ;;
+            *) npx playwright install --with-deps chromium firefox ;;
+          esac
+      - run: npm run typecheck
+      - name: Teste (${{ matrix.suite }})
+        run: |
+          case "${{ matrix.suite }}" in
+            smoke) npm run test:smoke ;;
+            seo) npm run test:seo ;;
+            tour) npm run test:tour:once ;;
+          esac
+      # Fără raport HTML / poze / video: la final doar testele picate și cauza (în log și în rezumatul job-ului)
+      - name: Teste picate și cauza
+        if: always()
+        run: node scripts/failures-summary.mjs
+      # results.json (text, fără poze/video) doar pentru triage-ul cu Claude
+      - uses: actions/upload-artifact@v4
+        if: failure() && vars.CLAUDE_TRIAGE == 'true'
+        with:
+          name: playwright-results-${{ matrix.suite }}
+          path: test-results/results.json
+          retention-days: 7
+
+  # Analiză automată a eșecurilor cu Claude (necesită secretul ANTHROPIC_API_KEY)
+  claude-triage:
+    needs: e2e
+    if: failure() && vars.CLAUDE_TRIAGE == 'true' && github.repository_owner == 'AndreiUrsac84'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      # fiecare set picat ajunge în test-results/playwright-results-<set>/results.json
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-results-*
+          path: test-results
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Suita E2E pentru dauron-trust.com a picat. Folosește subagentul qa-tester.
+            Citește test-results/playwright-results-*/results.json, clasifică fiecare eșec (bug site / test fragil / schimbare voită / instabil).
+            Pentru bugurile de site deschide un issue cu raportul. Pentru testele fragile deschide un PR cu reparația.
