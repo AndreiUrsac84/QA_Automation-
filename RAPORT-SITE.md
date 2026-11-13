@@ -1,27 +1,43 @@
-# Raport analiză dauron-trust.com – de reparat la următorul release
+# Raport analiză dauron-trust.com
 
-Data analizei: 2026-10-12. Metodă: verificare cu `curl` a celor 6 pagini principale și a unui articol
-(`/articole/valabilitate-autorizatie-construire-2026/`), plus `robots.txt`, `sitemap.xml` și headerele HTTP.
-Nu s-a testat formularul de contact și nu s-a rulat suita Playwright.
+Data analizei: 2026-11-13 (reluare a analizei din 2026-10-12). Metodă: `curl` pe pagini, headere, `robots.txt`,
+`sitemap.xml`, plus suita Playwright SEO rulată pe producție (1504 trecute, 18 picate înainte de ajustarea testului).
+Nu s-a testat formularul de contact. Istoricul GitHub Actions: doar repo-ul public `AndreiUrsac84/QA_Automation-` a putut fi citit.
 
 ## Rezumat
 
-Site-ul e rapid și corect din punct de vedere SEO. Rămân de reparat: headerele de securitate, redirectul `www`,
-anul din footer și câteva neconcordanțe minore.
+Din problemele din raportul din octombrie, **1, 2, 3, 6 și 9 sunt reparate** (headere, redirect `www`, footer 2026,
+link GDPR cu slash, `lastmod` în sitemap). Rămân de făcut: meta description prea lungi, `Cache-Control`, diferența
+`description`/`og:description` pe Home și verificarea linkurilor sociale.
 
-| # | Prioritate | Problemă | Efort |
+| # | Prioritate | Problemă | Stare |
 |---|---|---|---|
-| 1 | Mare | Lipsesc headerele de securitate (HSTS, CSP, X-Frame-Options, Referrer-Policy) | mic |
-| 2 | Medie | `www.dauron-trust.com` răspunde 200, fără redirect | mic |
-| 3 | Medie | Footer „© 2025” | foarte mic |
-| 4 | Mică | Lipsește `Cache-Control` pe pagini și resurse statice | mic |
-| 5 | Mică | `description` și `og:description` diferă pe Home | foarte mic |
-| 6 | Mică | Linkul din footer către GDPR e `/gdpr`, fără slash (merge prin redirect 301) | foarte mic |
-| 7 | De verificat | Linkurile Facebook / Instagram din pagina de contact | mic |
-| 8 | Sugestie | Pagina Home nu afișează emailul și adresa | mic |
-| 9 | Sugestie | Sitemap: cele 6 pagini principale nu au `lastmod` | mic |
+| 0 | Medie | 9 pagini cu meta description > 170 caractere (RO/EN/IT/ES/DE/HU) | **nou, deschis** |
+| 1 | Mare | Headere de securitate | reparat (CSP încă Report-Only, HSTS fără `includeSubDomains`) |
+| 2 | Medie | `www` fără redirect | reparat (301) |
+| 3 | Medie | Footer „© 2025” | reparat („© 2026”) |
+| 4 | Mică | `Cache-Control: no-cache` pe pagini | deschis (resursele statice neverificate) |
+| 5 | Mică | `description` ≠ `og:description` pe Home | deschis |
+| 6 | Mică | Link footer `/gdpr` fără slash | reparat |
+| 7 | De verificat | Linkuri Facebook / Instagram din contact | deschis |
+| 8 | Sugestie | Home fără email și adresă | deschis |
+| 9 | Sugestie | Sitemap fără `lastmod` pe paginile principale | reparat (324 din 378 URL-uri au `lastmod`) |
 
-## 1. Headere de securitate lipsă (prioritate mare)
+### 0. Meta description prea lungi (prioritate medie)
+
+Au picat 18 teste (9 pagini × desktop/mobil) în jobul CI `seo`, la fiecare rulare programată din 10.11. Lungimi măsurate:
+
+- `/servicii/obtinere-acte/`: 212 caractere în RO; la fel de lungă în EN, IT, ES, DE, iar în HU 267.
+- `/de/servicii/intrare-in-legalitate/`: 178.
+- `/de/servicii/anexe-garaje-garduri/` și `/hu/servicii/anexe-garaje-garduri/`: peste 170 (în RO are 168).
+
+**Reparare:** scurtat la ≤ 160 caractere, mai ales textele traduse (HU/DE sunt cele mai lungi).
+**Test:** pragul din `seo.spec.ts` a fost ajustat: eșec sub 50 sau peste 300 de caractere, avertisment în raport între 171 și 300.
+Când descrierile sunt scurtate, pragul se poate reduce înapoi la 170.
+
+## Detalii din analiza din octombrie (istoric)
+
+### 1. Headere de securitate (reparat 2026-11-13)
 
 **Constatare.** `https://dauron-trust.com/` (server LiteSpeed) trimite doar `X-Content-Type-Options: nosniff` și
 `X-XSS-Protection: 1; mode=block`. Lipsesc:
@@ -48,7 +64,7 @@ Atenție la `includeSubDomains` dacă există subdomenii fără HTTPS.
 
 **Verificare după reparare:** `curl -sI https://dauron-trust.com/` arată cele patru headere pe toate paginile.
 
-## 2. `www` nu redirecționează (prioritate medie)
+### 2. `www` nu redirecționează (prioritate medie)
 
 **Constatare.** `https://www.dauron-trust.com/` răspunde `200` cu același conținut ca `https://dauron-trust.com/`.
 Canonical-ul indică varianta fără `www`, deci Google o preferă, dar conținutul rămâne accesibil pe două adrese.
@@ -63,14 +79,14 @@ RewriteRule ^(.*)$ https://dauron-trust.com/$1 [R=301,L]
 
 **Verificare:** `curl -sI https://www.dauron-trust.com/` întoarce `301` cu `Location: https://dauron-trust.com/`.
 
-## 3. Footer „© 2025” (prioritate medie)
+### 3. Footer „© 2025” (prioritate medie)
 
 **Constatare.** Footerul afișează „© 2025 DAURON TRUST SRL”, deși articolele sunt despre 2026.
 
 **Reparare:** an calculat automat (`new Date().getFullYear()` la build) sau „© 2025–2026”. Dacă site-ul e static,
 anul se actualizează doar la fiecare build, deci merită un build anual.
 
-## 4. `Cache-Control` lipsă (prioritate mică)
+### 4. `Cache-Control` lipsă (prioritate mică)
 
 **Constatare.** Nu există `Cache-Control` pe pagini. Pagina cea mai mare, `/articole/`, are 112 KB; imaginile sunt
 mici (logo 3 KB, `planuri.jpg` 63 KB), deci efectul e modest, dar un vizitator care revine redescarcă totul.
@@ -78,7 +94,7 @@ mici (logo 3 KB, `planuri.jpg` 63 KB), deci efectul e modest, dar un vizitator c
 **Reparare:** pentru fișierele din `/_next/static/` și `/img/` (cu nume stabil sau cu hash) `max-age` lung,
 de exemplu `public, max-age=31536000, immutable` pentru cele cu hash; pentru HTML un `max-age` scurt sau `no-cache`.
 
-## 5. `description` diferă de `og:description` pe Home (prioritate mică)
+### 5. `description` diferă de `og:description` pe Home (prioritate mică)
 
 - `description`: „Proiectare structurală și coordonare de proiect pentru construcții civile, edilitare și reabilitări.
   Inginer constructor din 2009.”
@@ -86,25 +102,25 @@ de exemplu `public, max-age=31536000, immutable` pentru cele cu hash; pentru HTM
 
 **Reparare:** aceeași formulare în ambele, ca mesajul din Google să coincidă cu cel din rețelele sociale.
 
-## 6. Link `/gdpr` fără slash în footer (prioritate mică)
+### 6. Link `/gdpr` fără slash în footer (prioritate mică)
 
 **Constatare.** Footerul leagă la `/gdpr`; serverul răspunde `301` către `/gdpr/`. Funcționează, dar adaugă un salt.
 
 **Reparare:** `href="/gdpr/"`, ca restul linkurilor interne (`/about/`, `/portfolio/`, `/articole/`, `/contact/`).
 
-## 7. Linkuri sociale – de verificat
+### 7. Linkuri sociale – de verificat
 
 Pagina `/contact/` are elementele `contact-link-facebook` și `contact-link-instagram`. La analiză nu am citit adresele
 către care duc, deci nu pot confirma că sunt valide. De verificat manual înainte de release (sau cu testul
 `links.spec.ts` din suita automată).
 
-## 8. Home fără email și adresă (sugestie)
+### 8. Home fără email și adresă (sugestie)
 
 Pe Home apar doar telefonul și WhatsApp; emailul e doar pe `/contact/`. Pentru un birou local (Negrești, jud. Vaslui)
 o adresă vizibilă mărește încrederea și ajută SEO-ul local. Datele structurate (`PostalAddress`) există deja,
 deci informația e disponibilă.
 
-## 9. Sitemap fără `lastmod` pe paginile principale (sugestie)
+### 9. Sitemap fără `lastmod` pe paginile principale (sugestie)
 
 Din cele 34 de URL-uri din `sitemap.xml`, doar cele 28 de articole au `lastmod`. Adaugă data și pentru cele 6 pagini
 principale (`/`, `/about/`, `/portfolio/`, `/articole/`, `/contact/`, `/gdpr/`).

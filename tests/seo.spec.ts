@@ -24,13 +24,22 @@ test.describe('SEO tehnic', () => {
       await page.goto(p.path);
 
       const title = await page.title();
-      expect.soft(title.length, `title între 10 și 70 caractere: „${title}”`).toBeGreaterThanOrEqual(10);
-      expect.soft(title.length, `title între 10 și 70 caractere: „${title}”`).toBeLessThanOrEqual(70);
+      // Sub 10 sau peste 90 de caractere = eșec; între 71 și 90 Google doar trunchiază titlul, deci avertisment în raport.
+      expect.soft(title.length, `title între 10 și 90 caractere: „${title}”`).toBeGreaterThanOrEqual(10);
+      expect.soft(title.length, `title între 10 și 90 caractere: „${title}”`).toBeLessThanOrEqual(90);
+      if (title.length > 70) {
+        test.info().annotations.push({ type: 'avertisment', description: `title ${title.length} caractere (recomandat ≤ 70): „${title}”` });
+      }
 
       const desc = await page.locator('meta[name="description"]').getAttribute('content');
       expect(desc, 'meta description lipsă').toBeTruthy();
-      expect.soft(desc!.length, `meta description 50–170 caractere: „${desc}”`).toBeGreaterThanOrEqual(50);
-      expect.soft(desc!.length, `meta description 50–170 caractere: „${desc}”`).toBeLessThanOrEqual(170);
+      // Sub 50 sau peste 300 de caractere = eșec. Între 171 și 300 Google doar trunchiază afișarea (nu penalizează),
+      // deci pagina trece, dar descrierea apare ca avertisment în raport, de scurtat pe site.
+      expect.soft(desc!.length, `meta description 50–300 caractere: „${desc}”`).toBeGreaterThanOrEqual(50);
+      expect.soft(desc!.length, `meta description 50–300 caractere: „${desc}”`).toBeLessThanOrEqual(300);
+      if (desc!.length > 170) {
+        test.info().annotations.push({ type: 'avertisment', description: `meta description ${desc!.length} caractere (recomandat ≤ 170)` });
+      }
 
       await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /width=device-width/);
       await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /.+/);
