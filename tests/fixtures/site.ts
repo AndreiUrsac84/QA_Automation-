@@ -43,6 +43,11 @@ export const PAGES = [
   { path: '/articole/subiect/ce-s-a-schimbat-in-lege/', name: 'Subiect Ce s-a schimbat in lege', titleId: 'subiect-ce-s-a-schimbat-in-lege-title', titleRe: /schimbat .n lege.*DAURON TRUST/i },
   { path: '/articole/subiect/reguli-pentru-zona-mea/', name: 'Subiect Reguli pentru zona mea', titleId: 'subiect-reguli-pentru-zona-mea-title', titleRe: /zona mea.*DAURON TRUST/i },
   { path: '/articole/subiect/siguranta-si-rezistenta/', name: 'Subiect Siguranta si rezistenta', titleId: 'subiect-siguranta-si-rezistenta-title', titleRe: /rezisten.*DAURON TRUST/i },
+  { path: '/articole/subiect/topografie-cadastru/', name: 'Subiect Topografie si cadastru', titleId: 'subiect-topografie-cadastru-title', titleRe: /Topografie .i cadastru.*DAURON TRUST/i },
+  // Pagini apărute în 2026-11 (apar în sitemap): membru AICPS și campanii
+  { path: '/aicps/', name: 'Membru AICPS', titleId: 'aicps-titlu', titleRe: /Membru AICPS.*DAURON TRUST/i },
+  { path: '/campanii/', name: 'Campanii', titleId: 'campanii-title', titleRe: /Campanii .i oferte.*DAURON TRUST/i },
+  { path: '/campanii/black-friday/', name: 'Campanie Black Friday', titleId: 'campanie-black-friday-titlu', titleRe: /Black Friday 2026.*DAURON TRUST/i },
 ] as const;
 
 /**
